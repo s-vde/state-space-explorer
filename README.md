@@ -1,20 +1,15 @@
 # state-space-explorer
 Framework for exploring the state-space of multithreaded programs.
 
-### Dependencies
+### Subprojects
 The *state-space-explorer* project uses the following subprojects which can be cloned/downloaded separately from this github account:
 - *cpp-utils*: https://github.com/s-vde/cpp-utils
-- *record-replay*: https://github.com/s-vde/record-replay
+- *record-replay*: https://github.com/s-vde/record-replay (which requires LLVM and Clang 3.6.2, see [README](https://github.com/s-vde/record-replay/blob/master/README.md))
+- *multithreaded-c*: https://github.com/s-vde/multithreaded-c (optional, containing example input programs)
 
-The path of these subprojects relative to the *state-space-explorer* project root 
-have to be set in `Makefile.config`. 
-See the README of *record-replay* for instructions on how to build the LLVM project context required for building *record-replay*.
-
-The repository *multithreaded-c* (https://github.com/s-vde/multithreaded-c)
-contains a small collection of multithreaded programs to run the exploration on.
+The paths from the *state-space-explorer* project root to these subprojects have to be set in `Makefile.config`. 
 
 ### Using the explorer
-
 The explorer can be built running
 
 `make explorer`
