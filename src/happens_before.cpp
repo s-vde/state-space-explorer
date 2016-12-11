@@ -5,71 +5,6 @@
 
 namespace exploration
 {
-    Frontier::Frontier(const unsigned int nr_threads)
-    : mFrontier(nr_threads, VectorClock(nr_threads)) { }
-    
-    /**
-     @note Like std::vector[], this subscript operator does not throw if
-     mFrontier.size() > i and yields undefined behaviour otherwise.
-     */
-    const VectorClock& Frontier::operator[](const index_t i) const
-    {
-        return mFrontier[i];
-    }
-    
-    /**
-     @note Like std::vector[], this function does not throw if
-     mFrontier.size() > i and yields undefined behaviour otherwise.
-     */
-    void Frontier::set(const index_t i, const VectorClock& node)
-    {
-        mFrontier[i] = node;
-    }
-    
-    /**
-     @note Like std::vector[], this function does not throw if
-     mFrontier.size() > i1 and mFrontier.size() > i2 and yields undefined 
-     behaviour otherwise.
-     */
-    void Frontier::set(const index_t i1, const index_t i2, const VectorClock::value_t& val)
-    {
-        mFrontier[i1].set(i2, val);
-    }
-    
-    /**
-     @note Like std::vector[], this function does not throw if
-     mFrontier.size() > i and yields undefined behaviour otherwise.
-     */
-    const VectorClock::value_t& Frontier::own(const index_t i) const
-    {
-        return (*this)[i][i];
-    }
-    
-    /**
-     @note Like std::vector[], this functions does not throw if
-     mFrontier.size() > i and yields undefined behaviour otherwise.
-     */
-	void Frontier::set_own(const index_t i, const VectorClock::value_t& val)
-    {
-        set(i, i, val);
-    }
-    
-    void Frontier::reset()
-    {
-        const unsigned int nr_threads = mFrontier.size();
-        mFrontier.clear();
-        mFrontier = Frontier_t(nr_threads, VectorClock(nr_threads));
-    }
-
-    Tids Frontier::active_threads() const
-    {
-        Tids Active{};
-        for (Thread::tid_t tid = 0; tid < mFrontier.size(); ++tid) {
-            if (own(tid) > 0) { Active.insert(tid); }
-        }
-        return Active;
-    }
-	
 	bool HappensBeforeBase::happens_before(const index_t i1, const index_t i2) const
 	{
 		/// @pre defined_on_prefix(max(i1,i2))
@@ -89,7 +24,7 @@ namespace exploration
 		/// @pre frontier_valid_for(i)
 		assert(frontier_valid_for(i));
 		clock.filter_values_greater_than(previous_by(tid));
-		clock.set(tid, 0);
+		clock[tid] = 0;
 	}
 	
 	VectorClock::Indices_t HappensBeforeBase::thread_transitive_relation(
@@ -138,7 +73,7 @@ namespace exploration
 						DEBUGNL(tabs() << "\t\t" << i << " in Front");
 						Front.insert(i);
 					}
-					first_seen.set(tid, i);
+					first_seen[tid] = i;
 				} else {
 					DEBUGNL(tabs() << "\t\t" << i << " notin Front : not first of " << tid);
 					/// @invariant last_seen[tid] == C[tid]
@@ -146,7 +81,7 @@ namespace exploration
 					/// does not skip Transitions by tid).
 					assert(last_seen[tid] == C[tid]);
 				}
-				last_seen.set(tid, i);
+				last_seen[tid] = i;
 			}
 		}
 		DEBUGFNL("\t" << outputname(), "front", subseq, " = " << Front);
@@ -161,7 +96,8 @@ namespace exploration
 	
 	void HappensBeforeBase::reset()
 	{
-		mFrontier.reset();
+      std::size_t size = mFrontier.size();
+      mFrontier = frontier_t(size, VectorClock(size));
 		mIndex = 0;
 	}
 	
@@ -192,8 +128,8 @@ namespace exploration
 	
 	void HappensBeforeBase::update_frontier(const Transition<State>& t, const VectorClock& clock)
 	{
-		mFrontier.set(t.instr().tid(), clock);
-		mFrontier.set_own(t.instr().tid(), t.index());
+		mFrontier[t.instr().tid()] = clock;
+		mFrontier[t.instr().tid()][t.instr().tid()] = t.index();
 		++mIndex;
 	}
 	
@@ -202,7 +138,7 @@ namespace exploration
 	{
 		DEBUGFNL("\t" << outputname(), "max_dependent", "[" << i << "], " << instr, "");
 		if (ttr) { thread_transitive_reduction(i, instr.tid(), C); }
-		C.set(instr.tid(), 0); // exclude instr.tid-dependencies
+		C[instr.tid()] = 0; // exclude instr.tid-dependencies
 		DEBUG(" = " << C.max());
 		return C.max();
 	}
@@ -211,14 +147,14 @@ namespace exploration
 		const index_t i, const Instruction& instr, VectorClock C) const
 	{
 		thread_transitive_reduction(i, instr.tid(), C);
-		C.set(instr.tid(), 0); // exclude instr.tid-dependencies
+		C[instr.tid()] = 0; // exclude instr.tid-dependencies
 		VectorClock::Indices_t Covering{};
 		VectorClock::value_t j = 0;
 		// in every loop-iteration an entry in C is set to 0.
 		while (j = C.max(), j > 0) {
 			Covering.insert(j);
 			transitive_reduction(j, C);
-			C.set(mE[j].instr().tid(), 0);
+			C[mE[j].instr().tid()] = 0;
 		}
 		DEBUGFNL("\t" << outputname(), "covering", "[" << i << "], " << instr, " = " << Covering);
 		return Covering;

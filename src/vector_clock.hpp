@@ -1,18 +1,17 @@
+#pragma once
 
-#ifndef VECTOR_CLOCK_HPP_INCLUDED
-#define VECTOR_CLOCK_HPP_INCLUDED
+// DATASTRUCTURES
+#include "fixed_size_vector.hpp"
 
+// STL
 #include <set>
-#include <vector>
 
-/*---------------------------------------------------------------------------75*/
-/**
- @file vector_clock.hpp
- @brief Definition of class VectorClock.
- @author Susanne van den Elsen
- @date 2015
- */
-/*---------------------------------------------------------------------------++*/
+//--------------------------------------------------------------------------------------90
+/// @file vector_clock.hpp
+/// @brief Definition of class VectorClock.
+/// @author Susanne van den Elsen
+/// @date 2015-2016
+//----------------------------------------------------------------------------------------
 
 namespace exploration
 {
@@ -24,52 +23,20 @@ namespace exploration
      E represents a happens-before relation on E. The VectorClock class 
      encapsulated a clock datastructure and provides operations on it.
      */
-    class VectorClock
+   class VectorClock : public datastructures::fixed_size_vector<int>
     {
     public:
         
         // TYPES
-        
-        using value_t = int;
+      
         using index_t = int;
         using clock_t = std::vector<value_t>;
         using Indices_t = std::set<index_t>;
         using Values_t = std::set<value_t>;
-        
-        // CTOR
-        
-        /**
-         @brief Constructs a n-size 0-value VectorClock.
-         */
-        explicit VectorClock(const unsigned int n);
-        
-        // OPERATORS
-        
-        /**
-         @brief Read-only subscript operator.
-         */
-        const value_t& operator[](const int index) const;
-        
-        // ITERATORS
-        
-        clock_t::const_iterator begin() const
-        {
-            return mClock.begin();
-        }
-        
-        clock_t::const_iterator end() const
-        {
-            return mClock.end();
-        }
-        
-        //
-        
-        /**
-         @brief Sets mClock[index] to the given value.
-         */
-        void set(const index_t index, const value_t value);
-        
-        size_t size() const;
+
+       /// @brief Constructs a n-size 0-value VectorClock.
+
+       explicit VectorClock(std::size_t n);
         
         /**
          @brief Returns min({ mClock[i] })
@@ -107,14 +74,6 @@ namespace exploration
         
     private:
 		
-		// DATA MEMBERS
-		
-        /// @brief The actualc clock clock.
-        clock_t mClock;
-		
-        /// @brief Caching the size of mClock.
-        unsigned int mSize;
-		
 		// HELPER FUNCTIONS
 		
         /// @brief Returns { i | pred(mClock[i]) }.
@@ -123,16 +82,6 @@ namespace exploration
         /// @brief Returns { mClock[i] | pred(i) }.
         Values_t values_such_that(const std::function<bool(const value_t&)>& pred) const;
         
-    //friendly:
-        
-        friend std::ostream& operator<<(std::ostream&, const VectorClock&);
-        friend std::istream& operator>>(std::istream&, VectorClock&);
-        
     }; // end class VectorClock
     
-    std::ostream& operator<<(std::ostream&, const VectorClock&);
-    std::istream& operator>>(std::istream&, VectorClock&);
-    
 } // end namespace exploration
-
-#endif

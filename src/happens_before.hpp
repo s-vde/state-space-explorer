@@ -1,87 +1,35 @@
+#pragma once
 
-#ifndef HAPPENS_BEFORE_HPP_INCLUDED
-#define HAPPENS_BEFORE_HPP_INCLUDED
+// EXPLORATION
+#include "vector_clock.hpp"
 
-#include "container_output.hpp"
-#include "debug.hpp"
+// PROGRAM_MODEL
 #include "execution.hpp"
 #include "instruction_io.hpp"
 #include "state.hpp"
-#include "vector_clock.hpp"
 
-/*---------------------------------------------------------------------------75*/
-/**
- @file happens_before.hpp
- @brief Definition of class Frontier and class template HappensBefore<Dependence>.
- @author Susanne van den Elsen
- @date 2015
- */
-/*---------------------------------------------------------------------------++*/
+// UTILS
+#include "container_output.hpp"
+#include "debug.hpp"
+
+// DATASTRUCTURES
+#include "fixed_size_vector.hpp"
+
+//--------------------------------------------------------------------------------------90
+/// @file happens_before.hpp
+/// @author Susanne van den Elsen
+/// @date 2015-2016
+//----------------------------------------------------------------------------------------
 
 namespace exploration
 {
 	using namespace program_model;
 	
-    class Frontier
-    {
-    public:
-        
-        // TYPES
-		
-        using Frontier_t = std::vector<VectorClock>;
-        using index_t = VectorClock::index_t;
-        
-        // CTOR
-        
-        explicit Frontier(const unsigned int nr_threads);
-		
-		// OPERATORS
-		
-        const VectorClock& operator[](const index_t i) const;
-        
-        //
-        
-        /**
-         @brief Write access to mFrontier[i].
-         */
-        void set(const index_t i, const VectorClock& node);
-        
-        /**
-         @brief Write access to mFrontier[i1][i2].
-         */
-        void set(const index_t i1, const index_t i2, const VectorClock::value_t& val);
-        
-        /**
-         @brief Read-only access to mFrontier[i][i].
-         */
-        const VectorClock::value_t& own(const index_t i) const;
-        
-        /**
-         @brief Write access to mFrontier[index][index].
-         */
-        void set_own(const index_t i, const VectorClock::value_t& val);
-        
-        /**
-         @brief Refills mFrontier with n n-size 0-VectorClocks, where 
-         n = mFrontier.size().
-         */
-        void reset();
-
-        /**
-         @brief Returns the set of Thread::tid_t tid such that mFrontier[tid][tid] > 0.
-         @complexity O(n), where n = |mFrontier|.
-         */
-		Tids active_threads() const;
-        
-    private:
-        
-        Frontier_t mFrontier;
-        
-    }; // end class Frontier
-	
 	class HappensBeforeBase
 	{
 	public:
+      
+      using frontier_t = datastructures::fixed_size_vector<VectorClock>;
 		
 		// TYPES
 
@@ -93,7 +41,7 @@ namespace exploration
 		explicit HappensBeforeBase(const Execution<State>& E)
 		: mE(E)
 		, mHB({ VectorClock(mE.nr_threads()) })
-		, mFrontier(mE.nr_threads())
+		, mFrontier(mE.nr_threads(), VectorClock(mE.nr_threads()))
 		, mIndex(0) { }
 		
 		//
@@ -168,7 +116,7 @@ namespace exploration
 		relation mHB;
 		
 		/// @brief Caching the edges of the last Transition by each Thread in pre+(mE, mIndex).
-		Frontier mFrontier;
+		frontier_t mFrontier;
 		
 		/// @brief Index in mE with which mFrontier is corresponding.
 		unsigned int mIndex;
@@ -302,17 +250,17 @@ namespace exploration
             if (use_thread_transitive_reduction) {
                 thread_transitive_reduction(i, instr.tid(), C);
             }
-            C.set(instr.tid(), 0); // exclude instr.tid-dependencies
+            C[instr.tid()] = 0; // exclude instr.tid-dependencies
             VectorClock::index_t j;
             while (j = C.max(), j > 0) {
                 const Instruction& instr_j = mE[j].instr();
                 if (Dependence::dependent(instr_j, instr)) {
                     MaxDep.insert(j);
-                    C.set(instr_j.tid(), 0);
+                    C[instr_j.tid()] = 0;
                 } else {
                     // check previous Transition by instr_i.tid
                     // #todo show thread-transitive-red still holds.
-                    C.set(instr_j.tid(), mHB[j][instr_j.tid()]);
+                    C[instr_j.tid()] = mHB[j][instr_j.tid()];
                 }
             }
             DEBUG(" = " << MaxDep);
@@ -376,7 +324,7 @@ namespace exploration
                 // j -!>_pre(E,i) instr.tid
                 if (j > C[instr_j.tid()] && Dependence::dependent(instr_j, instr)) {
                     C.max(mHB[j]);
-                    C.set(instr_j.tid(), j);
+                    C[instr_j.tid()] = j;
 					min = C.min();
                     DEBUG(", " << mHB[j] << "[" << instr_j.tid() << ":=" << j << "]");
                 }
@@ -388,5 +336,3 @@ namespace exploration
 		
     }; // end class template HappensBefore<Dependence>
 } // end namespace exploration
-
-#endif
