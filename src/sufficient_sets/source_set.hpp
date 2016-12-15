@@ -62,7 +62,7 @@ namespace exploration
             const HappensBefore<Dependence>& HB)
         {
             DEBUGFNL(outputname(), "backtrack_points", to_short_string(E[index]), "");
-            VectorClock::Indices_t Covering = HB.covering(index, E[index].instr());
+            VectorClock::indices_t Covering = HB.covering(index, E[index].instr());
             BacktrackPoints Points{};
             for (const auto& covering : Covering) {
                 Points.push_back({ E[index].instr().tid(), covering });
@@ -87,7 +87,7 @@ namespace exploration
             const backtrack_point& point)
         {
             DEBUGFNL(outputname(), "add_backtrack_point", point, "");
-            VectorClock::Values_t v = HB.incomparable_after(point.index, index);
+            VectorClock::values_t v = HB.incomparable_after(point.index, index);
             v.insert(index);
             Tids Front = HB.tids(HB.front(v));
             /// @invariant !Front.empty()

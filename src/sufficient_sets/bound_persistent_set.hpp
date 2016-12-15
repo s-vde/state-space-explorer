@@ -174,7 +174,7 @@ namespace exploration
 			std::for_each(
 				s.next_cbegin(), s.next_cend(),
 				[this, &index, &HB, &Points] (const auto& next) {
-					VectorClock::Indices_t points =
+					VectorClock::indices_t points =
 					HB.max_dependent_per_thread(
 						index,
 						next.second.instr,

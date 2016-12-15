@@ -27,18 +27,19 @@ namespace exploration
 		clock[tid] = 0;
 	}
 	
-	VectorClock::Indices_t HappensBeforeBase::thread_transitive_relation(
+	VectorClock::indices_t HappensBeforeBase::thread_transitive_relation(
 		const index_t i, const index_t ifrom, const Thread::tid_t tid) const
 	{
 		/// @pre frontier_valid_for(i)
 		assert(frontier_valid_for(i));
-		return previous_by(tid).indices_values_greater_than(ifrom);
+      return indices_such_that(previous_by(tid),
+                               [&ifrom] (const auto& value) { return value > ifrom; });
 	}
 	
-	VectorClock::Values_t HappensBeforeBase::incomparable_after(
+	VectorClock::values_t HappensBeforeBase::incomparable_after(
 		const index_t i1, const index_t i2) const
 	{
-		VectorClock::Values_t Incomparable{};
+		VectorClock::values_t Incomparable{};
 		for (int j = i1+1; j < i2; ++j) {
 			if (!happens_before(i1, j)) {
 				Incomparable.insert(j);
@@ -48,9 +49,9 @@ namespace exploration
 		return Incomparable;
 	}
 	
-	VectorClock::Values_t HappensBeforeBase::front(const VectorClock::Indices_t& subseq) const
+	VectorClock::values_t HappensBeforeBase::front(const VectorClock::indices_t& subseq) const
 	{
-		VectorClock::Values_t Front{};
+		VectorClock::values_t Front{};
 		if (!subseq.empty()) {
 			VectorClock first_seen(mE.nr_threads());
 			VectorClock last_seen(mE.nr_threads());
@@ -110,7 +111,7 @@ namespace exploration
 		assert(defined_on_prefix(i) && frontier_valid_for(i));
 	}
 	
-	Tids HappensBeforeBase::tids(const VectorClock::Values_t& indices) const
+	Tids HappensBeforeBase::tids(const VectorClock::values_t& indices) const
 	{
 		Tids T{};
 		std::transform(
@@ -139,19 +140,19 @@ namespace exploration
 		DEBUGFNL("\t" << outputname(), "max_dependent", "[" << i << "], " << instr, "");
 		if (ttr) { thread_transitive_reduction(i, instr.tid(), C); }
 		C[instr.tid()] = 0; // exclude instr.tid-dependencies
-		DEBUG(" = " << C.max());
-		return C.max();
+		DEBUG(" = " << max_element(C));
+		return max_element(C);
 	}
 	
-	VectorClock::Indices_t HappensBeforeBase::covering(
+	VectorClock::indices_t HappensBeforeBase::covering(
 		const index_t i, const Instruction& instr, VectorClock C) const
 	{
 		thread_transitive_reduction(i, instr.tid(), C);
 		C[instr.tid()] = 0; // exclude instr.tid-dependencies
-		VectorClock::Indices_t Covering{};
+		VectorClock::indices_t Covering{};
 		VectorClock::value_t j = 0;
 		// in every loop-iteration an entry in C is set to 0.
-		while (j = C.max(), j > 0) {
+		while (j = max_element(C), j > 0) {
 			Covering.insert(j);
 			transitive_reduction(j, C);
 			C[mE[j].instr().tid()] = 0;

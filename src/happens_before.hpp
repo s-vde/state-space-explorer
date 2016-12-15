@@ -72,19 +72,19 @@ namespace exploration
 		 @details The function's parameter ifrom restricts the relation to
 		 vertices with index greater than ifrom.
 		 */
-		VectorClock::Indices_t thread_transitive_relation(
+		VectorClock::indices_t thread_transitive_relation(
 			const index_t i, const index_t ifrom, const Thread::tid_t tid) const;
 		
 		/**
 		 @brief Returns <code>{ i1 < j < i2 | !hb(mE[i1],mE[j]) }</code>.
 		 */
-		VectorClock::Values_t incomparable_after(const index_t i1, const index_t i2) const;
+		VectorClock::values_t incomparable_after(const index_t i1, const index_t i2) const;
 		
 		/**
 		 @brief The Front(subseq) contains the indices i of Transitions in subseq
 		 such that there is no j such that HB(subseq[j], subseq[i]).
 		 */
-		VectorClock::Values_t front(const VectorClock::Indices_t& subseq) const;
+		VectorClock::values_t front(const VectorClock::indices_t& subseq) const;
 		
 		/**
 		 @brief Pops the last element of mHB and sets mIndex to 0 (i.e.
@@ -102,7 +102,7 @@ namespace exploration
 		 */
 		void restore(const index_t i);
 		
-		Tids tids(const VectorClock::Values_t& indices) const;
+		Tids tids(const VectorClock::values_t& indices) const;
 		
 	protected:
 		
@@ -142,7 +142,7 @@ namespace exploration
 		 !exists k . hb(E[j],E[k]) && hb(E[k],E[i])</code>.
 		 @complexity O(n^2) with n = |clock|.
 		 */
-		VectorClock::Indices_t covering(
+		VectorClock::indices_t covering(
 			const index_t i, const Instruction& instr, VectorClock C) const;
 		
 		// PRE/POST CONDITIONS
@@ -237,7 +237,7 @@ namespace exploration
          dependent with instr, if it exists.
          */
 		// #todo coenabledness
-        VectorClock::Indices_t max_dependent_per_thread(
+        VectorClock::indices_t max_dependent_per_thread(
             const index_t i,
             const Instruction& instr,
             const bool use_thread_transitive_reduction=true) const
@@ -245,14 +245,14 @@ namespace exploration
 			/// @pre frontier_valid_for(i)
 			assert(frontier_valid_for(i));
             DEBUGFNL("\t" << outputname(), "max_dependent_per_thread", "[" << i << "], " << instr, "");
-            VectorClock::Indices_t MaxDep{};
+            VectorClock::indices_t MaxDep{};
             VectorClock C = clock(i, instr);
             if (use_thread_transitive_reduction) {
                 thread_transitive_reduction(i, instr.tid(), C);
             }
             C[instr.tid()] = 0; // exclude instr.tid-dependencies
             VectorClock::index_t j;
-            while (j = C.max(), j > 0) {
+            while (j = max_element(C), j > 0) {
                 const Instruction& instr_j = mE[j].instr();
                 if (Dependence::dependent(instr_j, instr)) {
                     MaxDep.insert(j);
@@ -273,7 +273,7 @@ namespace exploration
          !exists k . hb(E[j],E[k]) && hb(E[k],E[i])</code>.
          @complexity O(n^2) with n = |clock|.
          */
-        VectorClock::Indices_t covering(const index_t i, const Instruction& instr) const
+        VectorClock::indices_t covering(const index_t i, const Instruction& instr) const
         {
 			return HappensBeforeBase::covering(i, instr, clock(i, instr));
         }
@@ -318,14 +318,14 @@ namespace exploration
             );
             VectorClock C = mFrontier[instr.tid()];
             DEBUGF("\t" << outputname(), "create_clock", "[" << i << "] " << instr, " = MAX( " << C);
-            int min = C.min();
+            int min = min_element(C);
             for (int j = i-1; j > min; --j) {
                 const Instruction& instr_j = mE[j].instr();
                 // j -!>_pre(E,i) instr.tid
                 if (j > C[instr_j.tid()] && Dependence::dependent(instr_j, instr)) {
                     C.max(mHB[j]);
                     C[instr_j.tid()] = j;
-					min = C.min();
+					min = min_element(C);
                     DEBUG(", " << mHB[j] << "[" << instr_j.tid() << ":=" << j << "]");
                 }
             }
