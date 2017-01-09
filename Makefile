@@ -72,7 +72,7 @@ $(BUILD)/%.o: %.cpp
 
 explorer: $(explorer_objs)
 	rm -rf $(explorer_file)
-	$(LD) $(LDFLAGS) -o $(BUILD)/$(explorer_file) $(explorer_objs)
+	$(LD) $(LDFLAGS) -lboost_system -lboost_filesystem -o $(BUILD)/$(explorer_file) $(explorer_objs)
 	ln -s $(BUILD)/$(explorer_file) $(explorer_file)
 
 install: pass scheduler explorer

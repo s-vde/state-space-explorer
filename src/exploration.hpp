@@ -1,6 +1,4 @@
-
-#ifndef EXPLORATION_HPP_INCLUDED
-#define EXPLORATION_HPP_INCLUDED
+#pragma once
 
 #include <chrono>
 #include <sys/stat.h>
@@ -15,20 +13,46 @@
 #include "state_io.hpp"
 #include "utils_io.hpp"
 
-/*---------------------------------------------------------------------------75*/
-/**
- @file exploration.hpp
- @brief Definition of classes ExplorationStatistics and ExplorationBase and 
- class template Exploration<Mode>.
- @author Susanne van den Elsen
- @date 2015
- */
-/*---------------------------------------------------------------------------++*/
+// BOOST
+#include <boost/filesystem.hpp>
+
+//--------------------------------------------------------------------------------------90
+/// @file exploration.hpp
+/// @author Susanne van den Elsen
+/// @date 2015-2017
+//----------------------------------------------------------------------------------------
 
 namespace exploration
 {
+   namespace
+   {
+      //----------------------------------------------------------------------------------
+      
+      template <typename mode_t>
+      boost::filesystem::path output_dir(const scheduler::Program& program,
+                                         const mode_t& mode)
+      {
+         boost::filesystem::path output_dir(boost::filesystem::current_path());
+         output_dir += "/output/";
+         output_dir += program.file();
+         output_dir += std::to_string(program.nr_threads());
+         output_dir += "/";
+         output_dir += mode.path();
+         return output_dir;
+      }
+      
+      //----------------------------------------------------------------------------------
+      
+   } // end namespace
+   
+   //-------------------------------------------------------------------------------------
+   
+   void move_records(unsigned int nr, boost::filesystem::path target);
+   
+   //-------------------------------------------------------------------------------------
+   
 	using namespace program_model;
-	
+   
     class ExplorationStatistics
     {
     public:
@@ -95,8 +119,6 @@ namespace exploration
 		//
 		
 		void run_program();
-		void create_dir(const std::string& dir) const;
-		void log(const unsigned int nr, const std::string& dir);
 		
 		static const std::string name;
 		static std::string outputname();
@@ -126,7 +148,7 @@ namespace exploration
 			Args ... args)
         : ExplorationBase(P, max_nr_explorations)
         , mMode(mExecution, std::forward<Args>(args) ...)
-        , mOutputDir(outputdir()) { }
+        , m_output_dir(output_dir(P, mMode)) { }
 		
         //
 
@@ -136,11 +158,16 @@ namespace exploration
          (on-the-fly). For every leaf it visits, it runs the input program 
          mProgram under the schedule corresponding to that leaf.
          */
-        void run(const scheduler::schedule_t& s={})
-        {
-            create_dir(mOutputDir);
+         void run(const scheduler::schedule_t& s={})
+         {
+            if (boost::filesystem::exists(m_output_dir))
+            {
+               boost::filesystem::remove_all(m_output_dir);
+            }
+            boost::filesystem::create_directories(m_output_dir);
+
             // Open scheduler log file here once, opening in append mode is costly
-            mLogSchedules.open(mOutputDir + "/schedules.txt");
+            mLogSchedules.open(m_output_dir.string() + "/schedules.txt");
             scheduler::write_settings(mMode.scheduler_settings());
             mSchedule = s;
             int from = 1;
@@ -167,7 +194,7 @@ namespace exploration
         // DATA MEMBERS
 		
         Mode mMode;
-		std::string mOutputDir;
+       boost::filesystem::path m_output_dir;
 		
         // HELPER FUNCTIONS
 		
@@ -196,7 +223,8 @@ namespace exploration
         {
             update_statistics();
             mSchedule = scheduler::schedule(mExecution);
-            log(mStatistics.nr_explorations(), mOutputDir);
+           mLogSchedules << mSchedule << std::endl;
+           move_records(mStatistics.nr_explorations(), m_output_dir);
             DEBUGFNL(outputname(), "UPDATE_STATE", "from=" << from, "");
             for (auto& t : mExecution)
             {
@@ -209,24 +237,14 @@ namespace exploration
         void close()
         {
 			mStatistics.stop_clock();
-			const std::string statistics = mOutputDir + "/statistics.txt";
+			const std::string statistics = m_output_dir.string() + "/statistics.txt";
 			mStatistics.dump(statistics);
 			mLogSchedules.close();
             mMode.close(statistics);
-			system(("python -c 'import search_tree; print search_tree.tree_to_dot(\"" + mOutputDir + "\")'").c_str());
+			system(("python -c 'import search_tree; print search_tree.tree_to_dot(\"" + m_output_dir.string() + "\")'").c_str());
         }
         
         // LOGGING
-        
-        std::string outputdir() const
-        {
-            std::string str("output/");
-            str += mProgram.file();
-            str += std::to_string(mProgram.nr_threads());
-            str += "/";
-            str += mMode.path();
-            return str;
-        }
         
         template<typename OutStream>
         void dump_state(OutStream& os, const transition& t) const
@@ -238,7 +256,7 @@ namespace exploration
         
         void dump_branch(const unsigned int nr) const
         {
-            std::ofstream ofs(mOutputDir + "/exploration" + std::to_string(nr) + ".txt");
+            std::ofstream ofs(m_output_dir.string() + "/exploration" + std::to_string(nr) + ".txt");
             for (const auto& t : mExecution) {
                 dump_state(ofs, t);
                 ofs << to_short_string(t) << std::endl;
@@ -262,6 +280,7 @@ namespace exploration
             return full_name;
         }
     }; // end class template Exploration<Mode>
+   
+   //----------------------------------------------------------------------------------
+   
 } // end namespace exploration
-
-#endif

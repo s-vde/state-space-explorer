@@ -3,6 +3,19 @@
 
 namespace exploration
 {
+   //-------------------------------------------------------------------------------------
+   
+   void move_records(unsigned int nr, boost::filesystem::path target)
+   {
+      boost::filesystem::path source("record.txt");
+      target += "/record";
+      target += std::to_string(nr);
+      target += ".txt";
+      boost::filesystem::rename(source, target);
+   }
+   
+   //-------------------------------------------------------------------------------------
+   
     ExplorationStatistics::ExplorationStatistics()
     : mNrExplorations(0)
  	, mTimeCpu(0.0)
@@ -70,18 +83,8 @@ namespace exploration
 		}
 		DEBUGNL(mExecution);
 	}
-	
-	void ExplorationBase::create_dir(const std::string& dir) const
-	{
-		system(("rm -rf " + dir).c_str());
-		system(("mkdir -p " + dir).c_str());
-	}
-	
-	void ExplorationBase::log(const unsigned int nr, const std::string& dir)
-	{
-		mLogSchedules << mSchedule << std::endl;
-		system(("mv record.txt " + dir + "/record" + std::to_string(nr) + ".txt").c_str());
-	}
+   
+   //-------------------------------------------------------------------------------------
 	
 	const std::string ExplorationBase::name = "Exploration";
 	
