@@ -6,11 +6,14 @@
 #include "container_output.hpp"
 #include "debug.hpp"
 #include "error.hpp"
+#include "execution.hpp"
 #include "execution_io.hpp"
 #include "program.hpp"
 #include "replay.hpp"
+#include "schedule.hpp"
 #include "state.hpp"
 #include "state_io.hpp"
+#include "transition.hpp"
 #include "utils_io.hpp"
 
 // BOOST
@@ -103,8 +106,8 @@ namespace exploration
 		
 		// TYPES
 		
-		using transition = Transition<State>;
-		using execution = Execution<State>;
+      using execution = Execution;
+      using transition = typename execution::transition_t;
 		
 		// DATA MEMBERS
 		

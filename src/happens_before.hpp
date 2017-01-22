@@ -33,12 +33,14 @@ namespace exploration
 		
 		// TYPES
 
+      using execution_t = Execution;
+      using transition_t = execution_t::transition_t;
 		using relation = std::vector<VectorClock>;
-		using index_t = typename Execution<State>::index_t;
+		using index_t = typename execution_t::index_t;
 	
 		// CTOR
 		
-		explicit HappensBeforeBase(const Execution<State>& E)
+		explicit HappensBeforeBase(const execution_t& E)
 		: mE(E)
 		, mHB({ VectorClock(mE.nr_threads()) })
 		, mFrontier(mE.nr_threads(), VectorClock(mE.nr_threads()))
@@ -108,9 +110,9 @@ namespace exploration
 		
 		// DATA MEMBERS
 		
-		/// @brief Reference to Execution<State> object to which this HappensBefore
+		/// @brief Reference to execution_t object to which this HappensBefore
 		/// relation is attached.
-		const Execution<State>& mE;
+		const execution_t& mE;
 		
 		/// @brief The actual HappensBefore relation.
 		relation mHB;
@@ -131,7 +133,7 @@ namespace exploration
 
 		// HELPER FUNCTIONS
 
-		void update_frontier(const Transition<State>& t, const VectorClock& clock);
+		void update_frontier(const transition_t& t, const VectorClock& clock);
 		
 		VectorClock::index_t max_dependent(
 			const index_t i, const Instruction& instr, const bool ttr, VectorClock C) const;
@@ -194,7 +196,7 @@ namespace exploration
 	
         // CTOR
 		
-		explicit HappensBefore(const Execution<State>& E)
+		explicit HappensBefore(const execution_t& E)
 		: HappensBeforeBase(E) { }
 		
         //

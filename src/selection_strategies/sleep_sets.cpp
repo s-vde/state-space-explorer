@@ -1,5 +1,6 @@
 
 #include "sleep_sets.hpp"
+#include <instruction_io.hpp>
 #include <assert.h>
 #include <fstream>
 #include "container_output.hpp"
@@ -30,7 +31,7 @@ namespace scheduler
 		const Tids Awake = mSleep.awake(selection);
 		DEBUGF("SleepSets", "select", "", selection << " \\ " << mSleep << " = " << Awake);
 		if (!Awake.empty()) { return mAlternative.select(pool, Awake, task_nr);		}
-		else                { return result_t(ExecutionBase::Status::BLOCKED, -1);	}
+		else                { return result_t(Execution::Status::BLOCKED, -1);	}
 	}
 	
 	void SleepSets::initialize()

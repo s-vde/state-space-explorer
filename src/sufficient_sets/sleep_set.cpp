@@ -1,6 +1,9 @@
 
 #include "sleep_set.hpp"
 #include "container_io.hpp"
+#include "instruction_io.hpp"
+#include "transition.hpp"
+#include "transition_io.hpp"
 #include "utils_io.hpp"
 
 namespace exploration

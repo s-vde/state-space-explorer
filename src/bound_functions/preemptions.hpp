@@ -21,7 +21,8 @@ namespace bound_functions
     {
     public:
 		
-		using index_t = ExecutionBase::index_t;
+		using index_t = Execution::index_t;
+       using transition_t = typename Execution::transition_t;
 		
         static std::string name();
         
@@ -29,9 +30,8 @@ namespace bound_functions
         {
             return 0;
         }
-        
-        template<typename State>
-        static value_t step_value(const Transition<State>& last, const Thread::tid_t& tid)
+       
+        static value_t step_value(const transition_t& last, const Thread::tid_t& tid)
         {
             return
                 context_switch(last.instr().tid(), tid) &&
@@ -50,9 +50,8 @@ namespace bound_functions
          there may be instance-specific optimizations for selecting the
          element with minimal value.
          */
-        template<typename State>
         static Tids::const_iterator min_value(
-            const Execution<State>& E,
+            const Execution& E,
             const index_t index,
             const Tids& T,
             const Tids& Prioritize={})
@@ -81,8 +80,7 @@ namespace bound_functions
          j < index && (j == 0 || context_switch(E[j-1], E[j]))})</code>
          */
 		// #todo 0 is not in dom(E) and 0 is never returned.
-        template<typename State>
-        static index_t last_context_switch_before(const Execution<State>& E, const index_t index)
+        static index_t last_context_switch_before(const Execution& E, const index_t index)
         {
             /// @pre index > 0
             assert(index > 0);

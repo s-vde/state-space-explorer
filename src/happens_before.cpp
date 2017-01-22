@@ -127,7 +127,7 @@ namespace exploration
 		return mHB[i];
 	}
 	
-	void HappensBeforeBase::update_frontier(const Transition<State>& t, const VectorClock& clock)
+	void HappensBeforeBase::update_frontier(const transition_t& t, const VectorClock& clock)
 	{
 		mFrontier[t.instr().tid()] = clock;
 		mFrontier[t.instr().tid()][t.instr().tid()] = t.index();

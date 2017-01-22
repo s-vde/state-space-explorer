@@ -2,7 +2,7 @@
 #ifndef SLEEPSETS_HPP_INCLUDED
 #define SLEEPSETS_HPP_INCLUDED
 
-#include "execution_base.hpp"
+#include "execution.hpp"
 #include "non_preemptive.hpp"
 #include "sleep_set.hpp"
 
@@ -23,7 +23,7 @@ namespace scheduler
 	{
 	public:
 		
-		using result_t = std::pair<Execution<State>::Status,Thread::tid_t>;
+		using result_t = std::pair<Execution::Status,Thread::tid_t>;
 		
 		SleepSets();
 		

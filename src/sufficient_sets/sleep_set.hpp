@@ -6,7 +6,7 @@
 #include "debug.hpp"
 #include "dependence.hpp"
 #include "state.hpp"
-#include "transition_io.hpp"
+#include "instruction.hpp"
 
 /*---------------------------------------------------------------------------75*/
 /**
@@ -16,6 +16,14 @@
  @date 2015
  */
 /*---------------------------------------------------------------------------++*/
+
+namespace program_model
+{
+   class Transition;
+   
+} // end namespace program_model
+
+//----------------------------------------------------------------------------------------
 
 using namespace program_model;
 
@@ -27,7 +35,7 @@ namespace exploration
         
         // TYPES
         
-        using transition = Transition<State>;
+        using transition = Transition;
         
         // CTORS
 		

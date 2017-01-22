@@ -3,6 +3,7 @@
 #define SOURCE_SET_HPP_INCLUDED
 
 #include "sufficient_set.hpp"
+#include "transition_io.hpp"
 
 /*---------------------------------------------------------------------------75*/
 /**
@@ -27,8 +28,8 @@ namespace exploration
         
         // TYPES
         
-        using execution = Execution<State>;
-        using transition = Transition<State>;
+        using execution = Execution;
+       using transition = typename Execution::transition_t;
         
         // CTOR
         

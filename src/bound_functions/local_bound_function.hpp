@@ -40,9 +40,9 @@ namespace bound_functions
          the increase in bound value can be computed based only on the 
          last Transition in the Execution and the next Thread::tid_t.
          */
-        template<typename State, typename Sequence>
+        template<typename Sequence>
         static value_t value(
-            const Execution<State>& E,
+            const Execution& E,
             const Sequence S,
             const unsigned int index,
             const Thread::tid_t& tid)

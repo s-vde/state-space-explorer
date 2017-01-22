@@ -55,8 +55,8 @@ namespace exploration
         
         // TYPES
         
-        using execution = Execution<State>;
-        using transition = Transition<State>;
+        using execution = Execution;
+       using transition = typename Execution::transition_t;
         
         // CTOR
 		
