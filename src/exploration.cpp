@@ -78,7 +78,9 @@ namespace exploration
 	{
 		DEBUGFNL(outputname(), "run_program", "", "under schedule " << mSchedule);
 		scheduler::run_under_schedule(mProgram, mSchedule);
-		if (!utils::io::read_from_file("record.txt", mExecution)) {
+      mExecution = program_model::Execution(mProgram.nr_threads());
+		if (!utils::io::read_from_file("record.txt", mExecution))
+      {
 			ERROR(full_name(), "run_program"); /* #todo Some error handling */
 		}
 		DEBUGNL(mExecution);

@@ -222,7 +222,7 @@ namespace exploration
          @brief Loops through the Transitions of mExecution and lets Mode
          restore and update its internal state.
          */
-        void update_state(const unsigned int from)
+        void update_state(unsigned int from)
         {
             update_statistics();
             mSchedule = scheduler::schedule(mExecution);
