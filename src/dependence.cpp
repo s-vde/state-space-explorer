@@ -26,12 +26,20 @@ namespace exploration
     {
         return t1.tid() == t2.tid();
     }
+   
+   namespace
+   {
+      bool is_memory_modification(const Instruction& instruction)
+      {
+         return
+            instruction.op() == Object::Op::WRITE ||
+            instruction.op() == Object::Op::RMW;
+      }
+   } // end namespace
     
     bool Dependence::one_write(const Instruction& t1, const Instruction& t2)
     {
-        return
-            t1.op() == Object::Op::WRITE ||
-            t2.op() == Object::Op::WRITE;
+       return is_memory_modification(t1) || is_memory_modification(t2);
     }
     
     bool Dependence::one_lock(const Instruction& t1, const Instruction& t2)
