@@ -135,9 +135,6 @@ namespace exploration
 
 		void update_frontier(const transition_t& t, const VectorClock& clock);
 		
-		VectorClock::index_t max_dependent(
-			const index_t i, const Instruction& instr, const bool ttr, VectorClock C) const;
-		
 		/**
 		 @brief Returns <code>{ 0 < j < index | E[j] <: E[i] }</code>,
 		 where <code>E[j] <: E[i]</code> iff <code>hb(E[j],E[i]) &&
@@ -216,22 +213,53 @@ namespace exploration
             assert(defined_on_prefix(i) && frontier_valid_for(i));
         }
 
-        /**
-         @brief Returns the index of the most recent Transition in 
-         pre(mE,i) that is dependent with instr (and satisfies
-         the given other conditions). Returns 0 iff there is no such 
-         Transition.
-        */
-		// #todo coenabledness
-        VectorClock::index_t max_dependent(
-			const index_t i,
-			const Instruction& instr,
-			const bool ttr=true) const
-        {
-			/// @pre frontier_valid_for(i)
-			assert(frontier_valid_for(i));
-			return HappensBeforeBase::max_dependent(i, instr, ttr, clock(i, instr));
-        }
+		//--------------------------------------------------------------------------------------------
+		
+      /// @brief Returns the index of the most recent Transition in pre(mE,index) that is dependent 
+		/// with the given instruction (and satisfies the given other conditions). Returns 0 iff there 
+		/// is no such Transition.
+
+		VectorClock::index_t max_dependent(const index_t index, const Instruction& instruction,
+													  const bool apply_thread_transitive_reduction=true, 
+													  const bool apply_coenabled=false) const
+      {
+			/// @pre frontier_valid_for(index)
+			assert(frontier_valid_for(index));
+			
+			VectorClock C = clock(index, instruction);
+			
+			DEBUGF(outputname(), "max_dependent", 
+					 "[" << index << "], " << instruction << (apply_coenabled ? ", coenabled" : ""), 
+					 "\n");
+					 
+			if (apply_thread_transitive_reduction) 
+			{ 
+				thread_transitive_reduction(index, instruction.tid(), C); 
+			}
+			// exclude instr.tid-dependencies
+			C[instruction.tid()] = 0; 
+			
+			auto max_it = std::max_element(C.begin(), C.end());
+      
+			//
+			if (apply_coenabled)
+			{
+	   		while (*max_it > 0 &&
+						 (!Dependence::dependent(mE[*max_it].instr(), instruction) ||
+						  !Dependence::coenabled(mE[*max_it].instr(), instruction)))
+				{
+					Thread::tid_t max_tid = std::distance(C.begin(), max_it);
+					C[max_tid] = mHB[*max_it][max_tid];
+					max_it = std::max_element(C.begin(), C.end());
+				}
+			}
+			//
+			
+			DEBUG(" = " << *max_it);
+			return *max_it;
+		}
+		
+		//--------------------------------------------------------------------------------------------
         
         /**
          @brief Returns for each Thread::tid_t tid' with tid' != instr.tid

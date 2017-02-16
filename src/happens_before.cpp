@@ -134,16 +134,6 @@ namespace exploration
 		++mIndex;
 	}
 	
-	VectorClock::index_t HappensBeforeBase::max_dependent(
-		const index_t i, const Instruction& instr, const bool ttr, VectorClock C) const
-	{
-		DEBUGFNL("\t" << outputname(), "max_dependent", "[" << i << "], " << instr, "");
-		if (ttr) { thread_transitive_reduction(i, instr.tid(), C); }
-		C[instr.tid()] = 0; // exclude instr.tid-dependencies
-		DEBUG(" = " << max_element(C));
-		return max_element(C);
-	}
-	
 	VectorClock::indices_t HappensBeforeBase::covering(
 		const index_t i, const Instruction& instr, VectorClock C) const
 	{

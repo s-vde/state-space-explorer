@@ -55,7 +55,7 @@ namespace exploration
 		 {
 		 	Points = {};
 		 	for all(p in Tids | s.has_next(p)) {
-		 		Dep = { i in dom(E) | dependent(E_i, s.next(p)) && i -/> p }
+		 		Dep = { i in dom(E) | dependent(E_i, s.next(p)) && coenabled(E_i, s.next(p)) && i -/> p }
 		 	};
 		 	if (!Dep.empty()) { Points.insert((p, max(Dep))); }
 		 }
@@ -75,7 +75,7 @@ namespace exploration
             std::for_each(
                 E[index].pre().next_cbegin(), E[index].pre().next_cend(),
                 [&index, &HB, &Points] (const auto& next) {
-                    auto maxdep = HB.max_dependent(index, next.second.instr);
+                    auto maxdep = HB.max_dependent(index, next.second.instr, true, true);
                     if (maxdep > 0) {
                         Points.push_back({ next.first, maxdep });
                         DEBUGNL(tabs() << "\tPoints.add(" << Points.back() << ")");
