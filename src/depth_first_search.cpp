@@ -1,5 +1,5 @@
 
-#include "dfs.hpp"
+#include "depth_first_search.hpp"
 
 namespace exploration
 {

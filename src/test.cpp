@@ -1,6 +1,6 @@
 
 #include "exploration.hpp"
-#include "dfs.hpp"
+#include "depth_first_search.hpp"
 #include "dpor.hpp"
 #include "sufficient_sets/persistent_set.hpp"
 #include "sufficient_sets/source_set.hpp"
