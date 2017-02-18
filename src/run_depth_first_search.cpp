@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 	scheduler::Program program(dir, program_name, nr_threads);
 
 	using namespace exploration;
-	using dfs_t = Exploration<DFS<Bound<bound_functions::Preemptions>>>;
+	using dfs_t = Exploration<depth_first_search<Bound<bound_functions::Preemptions>>>;
 	
 	dfs_t dfs(program, max, std::numeric_limits<int>::max());
 	dfs.run();

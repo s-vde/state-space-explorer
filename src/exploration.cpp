@@ -83,7 +83,6 @@ namespace exploration
       {
 			ERROR(full_name(), "run_program"); /* #todo Some error handling */
 		}
-		DEBUGNL(mExecution);
 	}
    
    //-------------------------------------------------------------------------------------

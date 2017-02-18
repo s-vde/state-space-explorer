@@ -14,13 +14,13 @@ using namespace exploration;
 // State-Space Exploration techniques
 
 template<typename BoundFunction>
-using bs = Exploration<DFS<Bound<BoundFunction>>>;
+using bs = Exploration<depth_first_search<Bound<BoundFunction>>>;
 
 template<typename SufficientSetImpl>
-using dpor = Exploration<DFS<DPOR<SufficientSetImpl>>>;
+using dpor = Exploration<depth_first_search<DPOR<SufficientSetImpl>>>;
 
 template<typename BoundFunction>
-using bpor = Exploration<DFS<DPOR<BoundPersistent<BoundFunction>>>>;
+using bpor = Exploration<depth_first_search<DPOR<BoundPersistent<BoundFunction>>>>;
 
 int main(int argc, char* argv[])
 {
