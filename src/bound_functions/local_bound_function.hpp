@@ -50,7 +50,7 @@ namespace bound_functions
             /// @pre index <= E.size() && index < S.size()
             assert(index <= E.size() && index < S.size());
             if (index < 1)  { return Impl::step_value(tid);                                     }
-            else            { return S[index].boundvalue() + Impl::step_value(E[index], tid);   }
+            else            { return S[index].bound_value() + Impl::step_value(E[index], tid);   }
         }
     }; // end class template LocalBoundFunction<Impl,ValueT>
 } // end namespace bound_functions

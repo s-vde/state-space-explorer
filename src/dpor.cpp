@@ -27,13 +27,6 @@ void dpor_statistics::increase_nr_sleepset_blocked()
 
 //--------------------------------------------------------------------------------------------------
     
-// void dpor_statistics::dump(const std::string& filename) const
-// {
-   // 
-// }
-
-//--------------------------------------------------------------------------------------------------
-    
 std::ostream& operator<<(std::ostream& os, const dpor_statistics& stats)
 {
    os << "nr_sleepset_blocked\t" << stats.nr_sleepset_blocked() << std::endl;

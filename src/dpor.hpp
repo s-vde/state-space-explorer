@@ -28,8 +28,6 @@ public:
 		
    unsigned int nr_sleepset_blocked() const;
    void increase_nr_sleepset_blocked();
-        
-   // void dump(const std::string& filename) const;
 
 private:
         

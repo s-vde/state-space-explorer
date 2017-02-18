@@ -27,16 +27,6 @@ set(SUFFICIENT_SETS_SOURCES
   src/sufficient_sets/sufficient_set.cpp
 )
 
-set(EXPLORER_SOURCES
-  src/bound.cpp
-  src/dependence.cpp
-  src/depth_first_search.cpp
-  src/dpor.cpp
-  src/exploration.cpp
-  src/happens_before.cpp
-  src/vector_clock.cpp
-)
-
 set(SCHEDULER_SOURCES
   ${RECORD_REPLAY}/src/scheduler/program.cpp
   ${RECORD_REPLAY}/src/scheduler/schedule.cpp 
@@ -61,23 +51,14 @@ set(UTILS_SOURCES
   ${UTILS_SRC}/utils_io.cpp
 )
 
-add_executable(explorer 
-  src/test.cpp
-  ${UTILS_SOURCES}
-  ${BOUND_FUNCTIONS_SOURCES}
-  ${SUFFICIENT_SETS_SOURCES}
-  ${EXPLORER_SOURCES}
-  ${SCHEDULER_SOURCES}
-)
-
 add_executable(depth_first_search
   src/bound.cpp
   src/depth_first_search.cpp
   src/exploration.cpp
   src/run_depth_first_search.cpp
-  ${UTILS_SOURCES}
   ${BOUND_FUNCTIONS_SOURCES}
   ${SCHEDULER_SOURCES}
+  ${UTILS_SOURCES}
 )
 
 add_executable(dpor
@@ -89,7 +70,17 @@ add_executable(dpor
   src/happens_before.cpp
   src/run_dpor.cpp
   src/vector_clock.cpp
+  ${SCHEDULER_SOURCES}
   ${SUFFICIENT_SETS_SOURCES}
   ${UTILS_SOURCES}
+)
+
+add_executable(bounded_search
+  src/bound.cpp
+  src/depth_first_search.cpp
+  src/exploration.cpp
+  src/run_bounded_search.cpp
+  ${BOUND_FUNCTIONS_SOURCES}
   ${SCHEDULER_SOURCES}
+  ${UTILS_SOURCES}
 )
