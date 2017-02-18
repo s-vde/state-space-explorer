@@ -1,102 +1,131 @@
 
 #include "dpor.hpp"
+
+// UTILS
 #include "utils_io.hpp"
 
 namespace exploration
 {
-    DPORStatistics::DPORStatistics()
-    : mNrSleepSetBlocked(0) { }
+//--------------------------------------------------------------------------------------------------
+
+dpor_statistics::dpor_statistics()
+: mNrSleepSetBlocked(0) { }
+
+//--------------------------------------------------------------------------------------------------
     
-    unsigned int DPORStatistics::nr_sleepset_blocked() const
-    {
-        return mNrSleepSetBlocked;
-    }
+unsigned int dpor_statistics::nr_sleepset_blocked() const
+{
+   return mNrSleepSetBlocked;
+}
+
+//--------------------------------------------------------------------------------------------------
     
-    void DPORStatistics::increase_nr_sleepset_blocked()
-    {
-        ++mNrSleepSetBlocked;
-    }
+void dpor_statistics::increase_nr_sleepset_blocked()
+{
+   ++mNrSleepSetBlocked;
+}
+
+//--------------------------------------------------------------------------------------------------
     
-    void DPORStatistics::dump(const std::string& filename) const
-    {
-        utils::io::write_to_file(filename, *this, std::ios::app);
-    }
+// void dpor_statistics::dump(const std::string& filename) const
+// {
+   // 
+// }
+
+//--------------------------------------------------------------------------------------------------
     
-    std::ostream& operator<<(std::ostream& os, const DPORStatistics& stats)
-    {
-        os << "nr_sleepset_blocked\t" << stats.nr_sleepset_blocked() << std::endl;
-        return os;
-    }
+std::ostream& operator<<(std::ostream& os, const dpor_statistics& stats)
+{
+   os << "nr_sleepset_blocked\t" << stats.nr_sleepset_blocked() << std::endl;
+   return os;
+}
+
+//--------------------------------------------------------------------------------------------------
 	
-	DPORBase::DPORBase(const execution& E)
-	: mState({ SufficientSet() })
-	, mHB(E)
-	, mStatistics() { }
+dpor_base::dpor_base(const execution_t& execution) 
+: mState({ SufficientSet() })
+, mHB(execution) 
+{ 
+}
+
+//--------------------------------------------------------------------------------------------------
 	
-	scheduler::SchedulerSettings DPORBase::scheduler_settings()
-	{
-		return scheduler::SchedulerSettings("SleepSets");
+scheduler::SchedulerSettings dpor_base::scheduler_settings()
+{
+	return scheduler::SchedulerSettings("SleepSets");
+}
+
+//--------------------------------------------------------------------------------------------------
+	
+void dpor_base::write_scheduler_files() const
+{
+	/// @pre !mState.empty()
+	assert(!mState.empty());
+	utils::io::write_to_file("schedules/sleepset.txt", mState.back().sleepset());
+}
+
+//--------------------------------------------------------------------------------------------------
+	
+void dpor_base::reset()
+{
+	mHB.reset();
+}
+
+//--------------------------------------------------------------------------------------------------
+	
+void dpor_base::restore_state(const transition_t& transition)
+{
+	/// @pre mState.size() > transition.index()
+	assert(mState.size() > transition.index());
+	mHB.restore(transition.index());
+}
+
+//--------------------------------------------------------------------------------------------------
+	
+void dpor_base::update_statistics(const execution_t& execution)
+{
+	if (execution.status() == execution_t::Status::BLOCKED) {
+		mStatistics.increase_nr_sleepset_blocked();
 	}
+}
+
+//--------------------------------------------------------------------------------------------------
 	
-	void DPORBase::write_scheduler_files()
-	{
-		/// @pre !mState.empty()
-		assert(!mState.empty());
-		utils::io::write_to_file("schedules/sleepset.txt", mState.back().sleepset());
-	}
+void dpor_base::close(const std::string& statistics_file) const
+{
+   utils::io::write_to_file(statistics_file, mStatistics, std::ios::app);
+}
+
+//--------------------------------------------------------------------------------------------------
 	
-	void DPORBase::reset()
-	{
-		mHB.reset();
-	}
+void dpor_base::update_state(const execution_t& execution, const transition_t& transition)
+{
+	/// @pre mState.size() == transition.index()
+	assert(mState.size() == transition.index());
+   mState.back().add_to_backtrack(transition.instr().tid());
+	mState.emplace_back(SufficientSet{{}, SleepSet(mState.back().sleepset(), transition, Dependence())});
+	mHB.update(transition.index());
+	/// @post mState.size() == transition.index()+1
+	assert(mState.size() == transition.index()+1);
+}
+
+//--------------------------------------------------------------------------------------------------
 	
-	void DPORBase::restore_state(const transition& t)
-	{
-		/// @pre mState.size() > t.index()
-		assert(mState.size() > t.index());
-		mHB.restore(t.index());
-	}
+SufficientSet& dpor_base::pre_of_transition(const std::size_t index)
+{
+	return mState[index-1];
+}
+
+//--------------------------------------------------------------------------------------------------
 	
-	void DPORBase::update_statistics(const execution& E)
-	{
-		if (E.status() == execution::Status::BLOCKED) {
-			mStatistics.increase_nr_sleepset_blocked();
-		}
-	}
+const std::string dpor_base::name = "dpor";
+
+//--------------------------------------------------------------------------------------------------
 	
-	void DPORBase::close(const std::string& statistics) const
-	{
-		mStatistics.dump(statistics);
-	}
-	
-	void DPORBase::update_state(const execution& E, const transition& t)
-	{
-		/// @pre mState.size() == t.index()
-		assert(mState.size() == t.index());
-		DEBUGFNL(outputname(), "update_state", to_short_string(t), "");
-		mState.back().add_to_backtrack(t.instr().tid());
-		mState.emplace_back(SufficientSet{
-			{}, SleepSet(mState.back().sleepset(), t, Dependence())
-		});
-		mHB.update(t.index());
-		/// @post mState.size() == t.index()+1
-		assert(mState.size() == t.index()+1);
-	}
-	
-	SufficientSet& DPORBase::pre_of_transition(const unsigned int t_i)
-	{
-		return mState[t_i-1];
-	}
-	
-	const std::string DPORBase::name = "DPOR";
-	
-	const std::string DPORBase::tabs = "\t\t";
-	
-	std::string DPORBase::outputname()
-	{
-		std::string outputname = tabs;
-		outputname += text_color(name, utils::io::Color::CYAN);
-		return outputname;
-	}
-	
+std::string dpor_base::outputname()
+{
+	return text_color(name, utils::io::Color::CYAN);
+}
+
+//--------------------------------------------------------------------------------------------------
 } // end namespace exploration

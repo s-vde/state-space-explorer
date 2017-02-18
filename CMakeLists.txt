@@ -79,3 +79,17 @@ add_executable(depth_first_search
   ${BOUND_FUNCTIONS_SOURCES}
   ${SCHEDULER_SOURCES}
 )
+
+add_executable(dpor
+  src/bound.cpp
+  src/dependence.cpp
+  src/depth_first_search.cpp
+  src/dpor.cpp
+  src/exploration.cpp
+  src/happens_before.cpp
+  src/run_dpor.cpp
+  src/vector_clock.cpp
+  ${SUFFICIENT_SETS_SOURCES}
+  ${UTILS_SOURCES}
+  ${SCHEDULER_SOURCES}
+)
