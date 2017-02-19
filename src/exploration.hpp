@@ -52,7 +52,16 @@ namespace exploration
    
    void move_records(unsigned int nr, boost::filesystem::path target);
    
-   //-------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+
+struct settings 
+{
+   bool keep_records = false;
+   bool keep_logs = false;
+   
+}; //end struct settings
+
+//--------------------------------------------------------------------------------------------------
    
 	using namespace program_model;
    
@@ -118,6 +127,7 @@ namespace exploration
 		ExplorationStatistics mStatistics;
 		bool mDone;
 		std::ofstream mLogSchedules;
+      settings m_settings;
 		
 		//
 		
@@ -227,14 +237,20 @@ namespace exploration
             update_statistics();
             mSchedule = scheduler::schedule(mExecution);
            mLogSchedules << mSchedule << std::endl;
-           move_records(mStatistics.nr_explorations(), m_output_dir);
+         if (m_settings.keep_records)
+         {
+            move_records(mStatistics.nr_explorations(), m_output_dir);
+         }
             DEBUGFNL(outputname(), "UPDATE_STATE", "from=" << from, "");
             for (auto& t : mExecution)
             {
                 if (t.index() < from)   { mMode.restore_state(t);               }
                 else                    { mMode.update_state(mExecution, t);    }
             }
+         if (m_settings.keep_logs)
+         {
             dump_branch(mStatistics.nr_explorations());
+         }
         }
         
         void close()
@@ -244,7 +260,6 @@ namespace exploration
 			mStatistics.dump(statistics);
 			mLogSchedules.close();
             mMode.close(statistics);
-			system(("python -c 'import search_tree; print search_tree.tree_to_dot(\"" + m_output_dir.string() + "\")'").c_str());
         }
         
         // LOGGING
