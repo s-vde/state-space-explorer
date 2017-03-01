@@ -5,15 +5,17 @@ import pygraphviz as pgv
 
 #---------------------------------------------------------------------------------------------------
 
-def execution_tree(color="black"):
+def execution_tree(color='black', nodesep='3'):
     tree = pgv.AGraph(strict=False,directed=True)
+    
+    fontsize = '22'
     
     tree.graph_attr['dpi'] = '300'
     tree.graph_attr['strict'] = 'False'
     tree.graph_attr['directed'] = 'True' 
     tree.graph_attr['rankdir'] = 'TB'      # vertical edge direction
     tree.graph_attr['ranksep'] = '0.3'
-    tree.graph_attr['nodesep'] = '3'
+    tree.graph_attr['nodesep'] = nodesep
     tree.graph_attr['ordering'] = 'out'
     tree.graph_attr['forcelabels'] = 'True'
     # node style
@@ -24,14 +26,14 @@ def execution_tree(color="black"):
     tree.node_attr['style'] = 'filled'
     tree.node_attr['fillcolor'] = 'black'
     tree.node_attr['color'] = color
-    tree.node_attr['fontsize'] = '20'
+    tree.node_attr['fontsize'] = fontsize
     # tree.node_attr['fontname'] = 'Consolas'
     tree.edge_attr['arrowsize'] = '0.5'
     tree.edge_attr['weight'] = '100'
     tree.edge_attr['fontname'] = 'Ubuntu Code'
     tree.edge_attr['penwidth'] = 1
     tree.edge_attr['color'] = color
-    tree.edge_attr['fontsize'] = '20'
+    tree.edge_attr['fontsize'] = fontsize
     
     return tree
     
@@ -51,6 +53,12 @@ def add_node(tree, node_id):
         dummy_instr_id = "_instr_%s" % node_id
         tree.add_node(dummy_instr_id, width='0')
 
+#---------------------------------------------------------------------------------------------------
+
+def set_node_fontcolor(tree, node_id, fontcolor):
+    node = tree.get_node(node_id)
+    node.attr['fontcolor'] = fontcolor
+    
 #---------------------------------------------------------------------------------------------------
 
 def set_node_shape(tree, node_id, shape, width, height, fillcolor):
@@ -87,6 +95,15 @@ def add_edge(tree, source_id, dest_id, thread_id, label):
     dummy_node.attr['xlabel'] = ("  %s  " % label)
 
 #---------------------------------------------------------------------------------------------------
+
+def remove_edge_and_nodes(tree, source_id, dest_id):
+    dummy_id = "_instr_%s" % dest_id
+    tree.remove_edge(source_id, dummy_id)
+    tree.remove_edge(dummy_id, dest_id)
+    tree.remove_node(dummy_id)
+    tree.remove_node(dest_id)
+
+#---------------------------------------------------------------------------------------------------
         
 def highlight_edge(tree, source_id, dest_id, color, penwidth):
     dummy_id = "_instr_%s" % dest_id
@@ -118,6 +135,18 @@ def add_schedule(tree, schedule):
         add_node(tree, child_node_id)
         add_edge(tree, node_id, child_node_id, thread_id, str(thread_id))
         node_id = child_node_id
+        
+#---------------------------------------------------------------------------------------------------
+
+def remove_schedule(tree, schedule, from_index):
+    node_id = "s"
+    index = 1
+    for thread_id in schedule:
+        child_node_id = "%s.%d" % (node_id, thread_id)
+        if index >= from_index:
+            remove_edge_and_nodes(tree, node_id, child_node_id)
+        index = index+1
+        node_id = child_node_id
 
 #---------------------------------------------------------------------------------------------------
 
@@ -147,6 +176,20 @@ def add_execution(tree, execution):
         add_node(tree, child_node_id)
         add_edge(tree, node_id, child_node_id, thread_id, instruction)
         node_id = child_node_id
+        
+#---------------------------------------------------------------------------------------------------
+
+def add_execution_from_program_and_schedule(tree, program, schedule):
+    node_id = "s"
+    add_node(tree, node_id)
+    thread_indices = list(map(lambda thread_id : 0, program))
+    for thread_id in schedule:
+        thread_index = thread_indices[thread_id]
+        child_node_id = "%s.%d" % (node_id, thread_id)
+        add_node(tree, child_node_id)
+        add_edge(tree, node_id, child_node_id, thread_id, program[thread_id][thread_index])
+        node_id = child_node_id
+        thread_indices[thread_id] = thread_index + 1
     
 #---------------------------------------------------------------------------------------------------
 
@@ -156,18 +199,24 @@ def dump(tree, output_dir, program_name):
     os.system("test -d %s || mkdir -p %s" % (dot_dir, dot_dir))
     os.system("test -d %s || mkdir -p %s" % (jpg_dir, jpg_dir))
     dot_name = "%s/dot/%s.dot" % (output_dir, program_name)
+    # print ("dumping dot representation to %s" % dot_name)
     tree.write(dot_name)
     jpg_name = "%s/jpg/%s" % (output_dir, program_name)
     os.system("dot %s -Tjpg -o %s.jpg" % (dot_name, jpg_name))  
+
+#---------------------------------------------------------------------------------------------------    
+
+def parse_schedules(file_name):
+    file = open(file_name,'r')
+    lines = file.readlines()
+    return map(lambda line : ast.literal_eval(line), lines)
     
 #---------------------------------------------------------------------------------------------------
 
 def parse(file_name):
-    file = open(file_name,'r')
-    lines = file.readlines()
     tree = execution_tree()
-    for line in lines:
-        schedule = ast.literal_eval(line)
+    schedules = parse_schedules(file_name)
+    for schedule in schedules:
         add_schedule(tree, schedule)
     return tree
 
