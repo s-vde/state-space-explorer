@@ -1,0 +1,6 @@
+[submodule "libs/record-replay"]
+	path = libs/record-replay
+	url = https://github.com/s-vde/record-replay
+[submodule "libs/cpp-utils"]
+	path = libs/cpp-utils
+	url = https://github.com/s-vde/cpp-utils

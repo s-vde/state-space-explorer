@@ -1,18 +1,37 @@
 cmake_minimum_required(VERSION 3.5.2)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lboost_filesystem")
 
-set(CUSTOM_STRATEGIES ${CMAKE_CURRENT_SOURCE_DIR}/src/selection_strategies)
-add_subdirectory(${RECORD_REPLAY}/src/scheduler ${CMAKE_CURRENT_BINARY_DIR}/scheduler)
+####################
+# DEPENDENCIES
+
+set(CPP_UTILS   ${CMAKE_CURRENT_SOURCE_DIR}/libs/cpp-utils)
+include_directories(${CPP_UTILS}/src)
+
+set(RECORD_REPLAY   ${CMAKE_CURRENT_SOURCE_DIR}/libs/record-replay)
+set(PROGRAM_MODEL   ${RECORD_REPLAY}/src/program-model)
+include_directories(${PROGRAM_MODEL})
+
+set(SCHEDULER   ${RECORD_REPLAY}/src/scheduler)
+set(CUSTOM_STRATEGIES   ${CMAKE_CURRENT_SOURCE_DIR}/src/selection_strategies)
+include_directories(${SCHEDULER})
+add_subdirectory(${SCHEDULER}   ${CMAKE_CURRENT_BINARY_DIR}/scheduler)
+
+set(LLVM_PASS   ${RECORD_REPLAY}/src/llvm-pass)
+add_subdirectory(${LLVM_PASS}   ${CMAKE_CURRENT_BINARY_DIR}/llvm-pass)
+
+
+####################
+# INCLUDES
 
 include_directories(src)
 include_directories(src/selection_strategies)
 include_directories(src/sufficient_sets)
-include_directories(${RECORD_REPLAY}/src/scheduler)
-include_directories(${PROGRAM_MODEL_SRC})
-include_directories(${UTILS_SRC})
 
-set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lboost_filesystem")
+
+####################
+# SOURCES
 
 set(BOUND_FUNCTIONS_SOURCES 
   src/bound_functions/local_bound_function.hpp
@@ -32,24 +51,28 @@ set(SCHEDULER_SOURCES
   ${RECORD_REPLAY}/src/scheduler/schedule.cpp 
   ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp 
   ${RECORD_REPLAY}/src/scheduler/replay.cpp
-  ${PROGRAM_MODEL_SRC}/execution.cpp
-  ${PROGRAM_MODEL_SRC}/execution_io.cpp
-  ${PROGRAM_MODEL_SRC}/instruction.cpp
-  ${PROGRAM_MODEL_SRC}/instruction_io.cpp
-  ${PROGRAM_MODEL_SRC}/object.cpp
-  ${PROGRAM_MODEL_SRC}/object_io.cpp
-  ${PROGRAM_MODEL_SRC}/state.cpp
-  ${PROGRAM_MODEL_SRC}/state_io.cpp
-  ${PROGRAM_MODEL_SRC}/thread.cpp
-  ${PROGRAM_MODEL_SRC}/thread_io.cpp
-  ${PROGRAM_MODEL_SRC}/transition.cpp
-  ${PROGRAM_MODEL_SRC}/transition_io.cpp
+  ${PROGRAM_MODEL}/execution.cpp
+  ${PROGRAM_MODEL}/execution_io.cpp
+  ${PROGRAM_MODEL}/instruction.cpp
+  ${PROGRAM_MODEL}/instruction_io.cpp
+  ${PROGRAM_MODEL}/object.cpp
+  ${PROGRAM_MODEL}/object_io.cpp
+  ${PROGRAM_MODEL}/state.cpp
+  ${PROGRAM_MODEL}/state_io.cpp
+  ${PROGRAM_MODEL}/thread.cpp
+  ${PROGRAM_MODEL}/thread_io.cpp
+  ${PROGRAM_MODEL}/transition.cpp
+  ${PROGRAM_MODEL}/transition_io.cpp
 )
 
 set(UTILS_SOURCES
-  ${UTILS_SRC}/color_output.cpp
-  ${UTILS_SRC}/utils_io.cpp
+  ${CPP_UTILS}/src/color_output.cpp
+  ${CPP_UTILS}/src/utils_io.cpp
 )
+
+
+####################
+# EXECUTABLES
 
 add_executable(depth_first_search
   src/bound.cpp
