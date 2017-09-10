@@ -66,8 +66,9 @@ namespace exploration
             VectorClock::indices_t Covering = HB.covering(index, E[index].instr());
             BacktrackPoints Points{};
             for (const auto& covering : Covering) {
-                Points.push_back({ E[index].instr().tid(), covering });
-                DEBUGNL(tabs() << "\tPoints.add(<tid=" << E[index].instr().tid() << ", index=" << covering << ">)");
+                const auto tid_index = boost::apply_visitor(program_model::get_tid(), E[index].instr());
+                Points.push_back({ tid_index, covering });
+                DEBUGNL(tabs() << "\tPoints.add(<tid=" <<tid_index << ", index=" << covering << ">)");
             }
             return Points;
         }

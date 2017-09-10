@@ -53,8 +53,6 @@ set(SCHEDULER_SOURCES
   ${RECORD_REPLAY}/src/scheduler/replay.cpp
   ${PROGRAM_MODEL}/execution.cpp
   ${PROGRAM_MODEL}/execution_io.cpp
-  ${PROGRAM_MODEL}/instruction.cpp
-  ${PROGRAM_MODEL}/instruction_io.cpp
   ${PROGRAM_MODEL}/object.cpp
   ${PROGRAM_MODEL}/object_io.cpp
   ${PROGRAM_MODEL}/state.cpp
@@ -63,6 +61,7 @@ set(SCHEDULER_SOURCES
   ${PROGRAM_MODEL}/thread_io.cpp
   ${PROGRAM_MODEL}/transition.cpp
   ${PROGRAM_MODEL}/transition_io.cpp
+  ${PROGRAM_MODEL}/visible_instruction_io.cpp
 )
 
 set(UTILS_SOURCES

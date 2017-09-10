@@ -23,6 +23,7 @@ namespace scheduler
 	{
 	public:
 		
+		using instruction_t = program_model::visible_instruction_t;
 		using result_t = std::pair<Execution::Status,Thread::tid_t>;
 		
 		SleepSets();
@@ -41,7 +42,7 @@ namespace scheduler
 		
 		void initialize();
 		
-		void update_sleep(const TaskPool& pool, const Instruction& current);
+		void update_sleep(const TaskPool& pool, const instruction_t& current);
 		
 	}; // end class SleepSets
 } // end namespace scheduler

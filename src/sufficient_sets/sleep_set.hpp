@@ -6,7 +6,7 @@
 #include "debug.hpp"
 #include "dependence.hpp"
 #include "state.hpp"
-#include "instruction.hpp"
+#include "visible_instruction.hpp"
 
 /*---------------------------------------------------------------------------75*/
 /**
@@ -35,6 +35,7 @@ namespace exploration
         
         // TYPES
         
+        using instruction_t = program_model::visible_instruction_t;
         using transition = Transition;
         
         // CTORS
@@ -61,7 +62,7 @@ namespace exploration
          */
         template<typename Pool, typename Retrieve>
         void wake_up(
-            const Instruction& instr,
+            const instruction_t& instr,
             const Pool& pool,
             const Retrieve retrieve,
             const Dependence& D)

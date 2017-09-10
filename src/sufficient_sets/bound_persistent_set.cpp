@@ -127,7 +127,8 @@ namespace exploration
 			/* AND */	(mOpt.SLEEPSETS() == mOpt.sleep_t::CONSERVATIVE &&
 						 mState[t.index()-1].bound_exceeded()))
 		{
-			t_pre.wake_up(t.instr().tid());
+         const auto tid = boost::apply_visitor(program_model::get_tid(), t.instr());
+			t_pre.wake_up(tid);
 		}
 	}
 	
