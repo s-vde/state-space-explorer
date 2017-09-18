@@ -1,37 +1,53 @@
 
-#include "exploration.hpp"
-#include "depth_first_search.hpp"
-#include "dpor.hpp"
 #include "bound.hpp"
 #include "bound_functions/preemptions.hpp"
+#include "depth_first_search.hpp"
+#include "dpor.hpp"
+#include "exploration.hpp"
+#include "options.hpp"
 
-namespace exploration 
-{
-	template <typename bound_function_t>
-	using bounded_search = Exploration<depth_first_search<bound<bound_function_t>>>;
+namespace exploration {
+template <typename bound_function_t>
+using bounded_search = Exploration<depth_first_search<bound<bound_function_t>>>;
 }
 
 int main(int argc, char* argv[])
 {
-	const std::string bound_function = argv[1];
-	const unsigned int bound_value = atoi(argv[2]);
-	const std::string dir = argv[3];
-	const std::string program_name = argv[4];
-	const unsigned int nr_threads = atoi(argv[5]);
-	const unsigned int max = atoi(argv[6]);
-        
-	scheduler::Program program(dir, program_name, nr_threads);
-	
-	if (bound_function == "preemptions")
-	{
-		using namespace bound_functions;
-		exploration::bounded_search<Preemptions> bs(program, max, bound_value);
-		bs.run();
-		return 0;
-	}
-	else
-	{
-		std::cout << "bound_function has to be in { preemptions }\n";
-		return 1;
-	}
+   state_space_explorer::options options;
+   try
+   {
+      options.parse(argc, argv);
+      if (options.map().count("h"))
+      {
+         std::cout << options << "\n";
+         return 0;
+      }
+
+      const auto required = state_space_explorer::get_required_options(options);
+
+      const std::string bound_function = options.map()["bound-function"].as<std::string>();
+      const unsigned int bound = options.map()["bound"].as<unsigned int>();
+
+      if (bound_function == "preemptions")
+      {
+         exploration::bounded_search<bound_functions::Preemptions> bs(required.first,
+                                                                      required.second, bound);
+         bs.run();
+         return 0;
+      }
+      else
+      {
+         std::cout << "bound_function has to be in { preemptions }\n";
+         return 1;
+      }
+   }
+   catch (const std::invalid_argument& ex)
+   {
+      std::cout << ex.what() << "\n\n" << options << "\n";
+   }
+   catch (const boost::program_options::invalid_option_value&)
+   {
+      std::cout << "Please run State-Space Explorer with valid options\n" << options << "\n";
+      return 1;
+   }
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.2)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lboost_filesystem")
+set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lboost_filesystem -lboost_program_options")
 
 ####################
 # DEPENDENCIES
