@@ -34,26 +34,54 @@ The build process will produce a number of executables, corresponding to differe
 
 ## Using State-Space Explorer
 
+### Instrumenting the System Under Test
+
+In order to instrument an input program, run
+
+```
+./instrument.sh
+     <record_replay_build_dir>
+     <path_to_llvm>
+     <path_to_input_program_directory>
+     <input_program_filename_with_extension>
+     <nr_of_threads>
+     (compiler_options)
+```
+where all path variables can be either relative or absolute to the current directory.
+
+### Running State-Space Explorer on the Instrumented Program
+ 
 The State-Space Explorer can be run as follows:
 
 ```
-./depth_first_search <program_dir> <program> <nr_threads> <max_nr_executions>
+./depth_first_search 
+    --i <input_program> 
+    --n <nr_threads> 
+    --max <max_nr_executions>
 ```
 
 ```
-./bounded_search <bound_function> <bound_value> <program_dir> <program> <nr_threads> <max_nr_executions>
+./bounded_search
+    --i <input_program> 
+    --n <nr_threads> 
+    --max <max_nr_executions>
+    --bound-function <bound_function> 
+    --bound <bound_value> 
 ```
 
 ```
-./dpor <mode> <program_dir> <program> <nr_threads> <max_nr_executions>
+./dpor 
+    --i <input_program> 
+    --n <nr_threads> 
+    --max <max_nr_executions>
+    --sufficient-set <sufficient_set>
 ```
 
 where
-- `<mode> in { persistent }`
+- `<sufficient_set> in { persistent }`
 - `<bound_function> in { preemptions }`
-- `<bound_value>` is an integer
-- `<program_dir>` is the directory containing the input program source files
-- `<program>` is the name of the input program, without extension, and without suffix corresponding to the number of threads
+- `<bound>` is an integer
+- `<input_program>` is the name of the input program, without extension, and without suffix corresponding to the number of threads
 - `<nr_threads>` is the number of threads in the input program
 - `<max_nr_executions>` is the maximal number of executions that the exploration is allowed to see.
 
