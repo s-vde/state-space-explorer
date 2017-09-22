@@ -13,6 +13,9 @@ set(RECORD_REPLAY   ${CMAKE_CURRENT_SOURCE_DIR}/libs/record-replay)
 set(PROGRAM_MODEL   ${RECORD_REPLAY}/src/program-model)
 include_directories(${PROGRAM_MODEL})
 
+set(PROGRAM_MODEL    ${RECORD_REPLAY}/src/program-model)
+add_subdirectory(${PROGRAM_MODEL}   ${CMAKE_CURRENT_BINARY_DIR}/program-model)
+
 set(SCHEDULER   ${RECORD_REPLAY}/src/scheduler)
 set(CUSTOM_STRATEGIES   ${CMAKE_CURRENT_SOURCE_DIR}/src/selection_strategies)
 include_directories(${SCHEDULER})
@@ -51,17 +54,6 @@ set(SCHEDULER_SOURCES
   ${RECORD_REPLAY}/src/scheduler/schedule.cpp 
   ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp 
   ${RECORD_REPLAY}/src/scheduler/replay.cpp
-  ${PROGRAM_MODEL}/execution.cpp
-  ${PROGRAM_MODEL}/execution_io.cpp
-  ${PROGRAM_MODEL}/object.cpp
-  ${PROGRAM_MODEL}/object_io.cpp
-  ${PROGRAM_MODEL}/state.cpp
-  ${PROGRAM_MODEL}/state_io.cpp
-  ${PROGRAM_MODEL}/thread.cpp
-  ${PROGRAM_MODEL}/thread_io.cpp
-  ${PROGRAM_MODEL}/transition.cpp
-  ${PROGRAM_MODEL}/transition_io.cpp
-  ${PROGRAM_MODEL}/visible_instruction_io.cpp
 )
 
 set(UTILS_SOURCES
@@ -83,6 +75,8 @@ add_executable(depth_first_search
   ${UTILS_SOURCES}
 )
 
+target_link_libraries(depth_first_search RecordReplayProgramModel)
+
 add_executable(dpor
   src/bound.cpp
   src/dependence.cpp
@@ -97,6 +91,8 @@ add_executable(dpor
   ${UTILS_SOURCES}
 )
 
+target_link_libraries(dpor RecordReplayProgramModel)
+
 add_executable(bounded_search
   src/bound.cpp
   src/depth_first_search.cpp
@@ -106,3 +102,5 @@ add_executable(bounded_search
   ${SCHEDULER_SOURCES}
   ${UTILS_SOURCES}
 )
+
+target_link_libraries(bounded_search RecordReplayProgramModel)
