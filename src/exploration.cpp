@@ -1,96 +1,126 @@
 
 #include "exploration.hpp"
 
-namespace exploration
+
+namespace exploration {
+
+//--------------------------------------------------------------------------------------------------
+
+void move_records(unsigned int nr, boost::filesystem::path target)
 {
-   //-------------------------------------------------------------------------------------
-   
-   void move_records(unsigned int nr, boost::filesystem::path target)
+   boost::filesystem::path source("record.txt");
+   target += "/record";
+   target += std::to_string(nr);
+   target += ".txt";
+   boost::filesystem::rename(source, target);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+ExplorationStatistics::ExplorationStatistics()
+: mNrExplorations(0)
+, mTimeCpu(0.0)
+, mTimeWall(0.0)
+, mTimeCpuStart()
+, mTimeWallStart()
+{
+}
+
+//--------------------------------------------------------------------------------------------------
+
+unsigned int ExplorationStatistics::nr_explorations() const
+{
+   return mNrExplorations;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void ExplorationStatistics::increase_nr_explorations()
+{
+   ++mNrExplorations;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+double ExplorationStatistics::time_cpu() const
+{
+   return mTimeCpu;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void ExplorationStatistics::start_clock()
+{
+   mTimeCpuStart = std::clock();
+   mTimeWallStart = wall_clock_t::now();
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void ExplorationStatistics::stop_clock()
+{
+   mTimeCpu = ((std::clock() - mTimeCpuStart) / (double)CLOCKS_PER_SEC);
+   mTimeWall = std::chrono::duration<double>(wall_clock_t::now() - mTimeWallStart).count();
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void ExplorationStatistics::dump(const std::string& filename) const
+{
+   std::ofstream ofs;
+   ofs.open(filename, std::ofstream::app);
+   ofs << "nr_explorations\t" << mNrExplorations << std::endl
+       << "cpu_time(s)\t" << mTimeCpu << std::endl
+       << "wall_time(s)\t" << mTimeWall << std::endl;
+   ofs.close();
+}
+
+//--------------------------------------------------------------------------------------------------
+
+
+ExplorationBase::ExplorationBase(const scheduler::Program& P,
+                                 const unsigned int max_nr_explorations)
+: mProgram(P)
+, mSchedule()
+, mMaxNrExplorations(max_nr_explorations)
+, mExecution(mProgram.nr_threads())
+, mStatistics()
+, mDone(false)
+, mLogSchedules()
+{
+}
+
+//--------------------------------------------------------------------------------------------------
+
+ExplorationStatistics ExplorationBase::statistics() const
+{
+   return mStatistics;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void ExplorationBase::run_program()
+{
+   DEBUGFNL(outputname(), "run_program", "", "under schedule " << mSchedule);
+   scheduler::run_under_schedule(mProgram, mSchedule);
+   mExecution = program_model::Execution(mProgram.nr_threads());
+   if (!utils::io::read_from_file("record.txt", mExecution))
    {
-      boost::filesystem::path source("record.txt");
-      target += "/record";
-      target += std::to_string(nr);
-      target += ".txt";
-      boost::filesystem::rename(source, target);
+      ERROR(full_name(), "run_program"); /* #todo Some error handling */
    }
-   
-   //-------------------------------------------------------------------------------------
-   
-    ExplorationStatistics::ExplorationStatistics()
-    : mNrExplorations(0)
- 	, mTimeCpu(0.0)
-	, mTimeWall(0.0)
-	, mTimeCpuStart()
-  	, mTimeWallStart() { }
-    
-    unsigned int ExplorationStatistics::nr_explorations() const
-    {
-        return mNrExplorations;
-    }
-    
-    void ExplorationStatistics::increase_nr_explorations()
-    {
-        ++mNrExplorations;
-    }
-	
-	double ExplorationStatistics::time_cpu() const
-	{
-		return mTimeCpu;
-	}
-	
-	void ExplorationStatistics::start_clock()
-	{
-		mTimeCpuStart = std::clock();
-		mTimeWallStart = wall_clock_t::now();
-	}
-	
-	void ExplorationStatistics::stop_clock()
-	{
-		mTimeCpu = ((std::clock() - mTimeCpuStart) / (double)CLOCKS_PER_SEC);
-		mTimeWall = std::chrono::duration<double>(wall_clock_t::now()-mTimeWallStart).count();
-	}
-    
-    void ExplorationStatistics::dump(const std::string& filename) const
-    {
-        std::ofstream ofs;
-        ofs.open(filename, std::ofstream::app);
-        ofs << "nr_explorations\t" << mNrExplorations << std::endl
-			<< "cpu_time(s)\t" << mTimeCpu << std::endl
-			<< "wall_time(s)\t" << mTimeWall << std::endl;
-        ofs.close();
-    }
-	
-	ExplorationBase::ExplorationBase(const scheduler::Program& P, const unsigned int max_nr_explorations)
-	: mProgram(P)
-	, mSchedule()
-	, mMaxNrExplorations(max_nr_explorations)
-	, mExecution(mProgram.nr_threads())
-	, mStatistics()
-	, mDone(false)
-	, mLogSchedules() { }
-	
-	ExplorationStatistics ExplorationBase::statistics() const
-	{
-		return mStatistics;
-	}
-	
-	void ExplorationBase::run_program()
-	{
-		DEBUGFNL(outputname(), "run_program", "", "under schedule " << mSchedule);
-		scheduler::run_under_schedule(mProgram, mSchedule);
-      mExecution = program_model::Execution(mProgram.nr_threads());
-		if (!utils::io::read_from_file("record.txt", mExecution))
-      {
-			ERROR(full_name(), "run_program"); /* #todo Some error handling */
-		}
-	}
-   
-   //-------------------------------------------------------------------------------------
-	
-	const std::string ExplorationBase::name = "Exploration";
-	
-	std::string ExplorationBase::outputname()
- 	{
-		return text_color(name, utils::io::Color::MAGENTA);
-	}
+}
+
+//--------------------------------------------------------------------------------------------------
+
+const std::string ExplorationBase::name = "Exploration";
+
+//--------------------------------------------------------------------------------------------------
+
+std::string ExplorationBase::outputname()
+{
+   return text_color(name, utils::io::Color::MAGENTA);
+}
+
+//--------------------------------------------------------------------------------------------------
+
 } // end namespace exploration
