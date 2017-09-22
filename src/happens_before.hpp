@@ -217,16 +217,7 @@ public:
    /// @brief Adds a new VectorClock corresponding to the happens-before edges of Transition mE[i]
    /// to mHB.
 
-   void update(const index_t i)
-   {
-      /// @pre defined_on_prefix(i-1) && frontier_valid_for(i-1)
-      assert(defined_on_prefix(i - 1) && frontier_valid_for(i - 1));
-      DEBUGFNL(outputname(), "update", "[" << i << "]", "");
-      mHB.push_back(detail::create_clock<Dependence>(mE, mHB, i, mE[i].instr()));
-      update_frontier(mE[i], mHB.back());
-      /// @post defined_on_prefix(i) && frontier_valid_for(i)
-      assert(defined_on_prefix(i) && frontier_valid_for(i));
-   }
+   void update(const index_t i);
 
    /// @brief Returns the index of the most recent Transition in pre(mE,index) that is dependent
    /// with the given instruction (and satisfies the given other conditions). Returns 0 iff there
@@ -234,42 +225,7 @@ public:
 
    VectorClock::index_t max_dependent(const index_t index, const instruction_t& instruction,
                                       const bool apply_thread_transitive_reduction = true,
-                                      const bool apply_coenabled = false) const
-   {
-      /// @pre frontier_valid_for(index)
-      assert(frontier_valid_for(index));
-
-      VectorClock C = clock(index, instruction);
-
-      DEBUGF(outputname(), "max_dependent",
-             "[" << index << "], " << instruction << (apply_coenabled ? ", coenabled" : ""), "\n");
-
-      const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
-
-      if (apply_thread_transitive_reduction)
-      {
-         thread_transitive_reduction(index, tid, C);
-      }
-      // exclude instr.tid-dependencies
-      C[tid] = 0;
-
-      auto max_it = std::max_element(C.begin(), C.end());
-
-      //
-      if (apply_coenabled)
-      {
-         while (*max_it > 0 && (!Dependence::dependent(mE[*max_it].instr(), instruction) ||
-                                !Dependence::coenabled(mE[*max_it].instr(), instruction)))
-         {
-            program_model::Thread::tid_t max_tid = std::distance(C.begin(), max_it);
-            C[max_tid] = mHB[*max_it][max_tid];
-            max_it = std::max_element(C.begin(), C.end());
-         }
-      }
-
-      DEBUG(" = " << *max_it);
-      return *max_it;
-   }
+                                      const bool apply_coenabled = false) const;
 
    /// @brief Returns for each program_model::Thread::tid_t tid' with tid' != instr.tid the most
    /// recent Transition of tid' in pre(mE,i) that is dependent with instr, if it exists.
@@ -277,61 +233,134 @@ public:
    // #todo coenabledness
    VectorClock::indices_t max_dependent_per_thread(
       const index_t i, const instruction_t& instr,
-      const bool use_thread_transitive_reduction = true) const
-   {
-      /// @pre frontier_valid_for(i)
-      assert(frontier_valid_for(i));
-      DEBUGFNL("\t" << outputname(), "max_dependent_per_thread", "[" << i << "], " << instr, "");
-      VectorClock::indices_t MaxDep{};
-      VectorClock C = clock(i, instr);
-      const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
-      if (use_thread_transitive_reduction)
-      {
-         thread_transitive_reduction(i, tid, C);
-      }
-      C[tid] = 0; // exclude instr.tid-dependencies
-      VectorClock::index_t j;
-      while (j = max_element(C), j > 0)
-      {
-         const instruction_t& instr_j = mE[j].instr();
-         const auto tid_j = boost::apply_visitor(program_model::get_tid(), instr_j);
-         if (Dependence::dependent(instr_j, instr))
-         {
-            MaxDep.insert(j);
-            C[tid_j] = 0;
-         }
-         else
-         {
-            // check previous Transition by instr_i.tid
-            // #todo show thread-transitive-red still holds.
-            C[tid_j] = mHB[j][tid_j];
-         }
-      }
-      DEBUG(" = " << MaxDep);
-      return MaxDep;
-   }
+      const bool use_thread_transitive_reduction = true) const;
 
    /// @brief Returns <code>{ 0 < j < index | E[j] <: E[i] }</code>, where <code>E[j] <: E[i]</code>
    /// iff <code>hb(E[j],E[i]) && !exists k . hb(E[j],E[k]) && hb(E[k],E[i])</code>.
    /// @complexity O(n^2) with n = |clock|.
 
-   VectorClock::indices_t covering(const index_t i, const instruction_t& instr) const
-   {
-      return HappensBeforeBase::covering(i, instr, clock(i, instr));
-   }
+   VectorClock::indices_t covering(const index_t i, const instruction_t& instr) const;
 
 private:
    /// @brief Returns the happens-before edges for instr in pre(mE,i).instr.
    /// @note Yields undefined behaviour if instr.tid == mE[i].instr.tid but !defined_on_prefix(i).
 
-   VectorClock clock(const index_t i, const instruction_t& instr) const
-   {
-      const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
-      const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
-      return tid == tid_i ? (*this)[i] : detail::create_clock<Dependence>(mE, mHB, i, instr);
-   }
+   VectorClock clock(const index_t i, const instruction_t& instr) const;
 
 }; // end class template HappensBefore<Dependence>
+
+//--------------------------------------------------------------------------------------------------
+
+template <typename Dependence>
+void HappensBefore<Dependence>::update(const index_t i)
+{
+   /// @pre defined_on_prefix(i-1) && frontier_valid_for(i-1)
+   assert(defined_on_prefix(i - 1) && frontier_valid_for(i - 1));
+   DEBUGFNL(outputname(), "update", "[" << i << "]", "");
+   mHB.push_back(detail::create_clock<Dependence>(mE, mHB, i, mE[i].instr()));
+   update_frontier(mE[i], mHB.back());
+   /// @post defined_on_prefix(i) && frontier_valid_for(i)
+   assert(defined_on_prefix(i) && frontier_valid_for(i));
+}
+
+//--------------------------------------------------------------------------------------------------
+
+template <typename Dependence>
+VectorClock::index_t HappensBefore<Dependence>::max_dependent(
+   const index_t index, const instruction_t& instruction,
+   const bool apply_thread_transitive_reduction, const bool apply_coenabled) const
+{
+   /// @pre frontier_valid_for(index)
+   assert(frontier_valid_for(index));
+
+   VectorClock C = clock(index, instruction);
+
+   DEBUGF(outputname(), "max_dependent",
+          "[" << index << "], " << instruction << (apply_coenabled ? ", coenabled" : ""), "\n");
+
+   const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
+
+   if (apply_thread_transitive_reduction)
+   {
+      thread_transitive_reduction(index, tid, C);
+   }
+   // exclude instr.tid-dependencies
+   C[tid] = 0;
+
+   auto max_it = std::max_element(C.begin(), C.end());
+
+   //
+   if (apply_coenabled)
+   {
+      while (*max_it > 0 && (!Dependence::dependent(mE[*max_it].instr(), instruction) ||
+                             !Dependence::coenabled(mE[*max_it].instr(), instruction)))
+      {
+         program_model::Thread::tid_t max_tid = std::distance(C.begin(), max_it);
+         C[max_tid] = mHB[*max_it][max_tid];
+         max_it = std::max_element(C.begin(), C.end());
+      }
+   }
+
+   DEBUG(" = " << *max_it);
+   return *max_it;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+template <typename Dependence>
+VectorClock::indices_t HappensBefore<Dependence>::max_dependent_per_thread(
+   const index_t i, const instruction_t& instr, const bool use_thread_transitive_reduction) const
+{
+   /// @pre frontier_valid_for(i)
+   assert(frontier_valid_for(i));
+   DEBUGFNL("\t" << outputname(), "max_dependent_per_thread", "[" << i << "], " << instr, "");
+   VectorClock::indices_t MaxDep{};
+   VectorClock C = clock(i, instr);
+   const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
+   if (use_thread_transitive_reduction)
+   {
+      thread_transitive_reduction(i, tid, C);
+   }
+   C[tid] = 0; // exclude instr.tid-dependencies
+   VectorClock::index_t j;
+   while (j = max_element(C), j > 0)
+   {
+      const instruction_t& instr_j = mE[j].instr();
+      const auto tid_j = boost::apply_visitor(program_model::get_tid(), instr_j);
+      if (Dependence::dependent(instr_j, instr))
+      {
+         MaxDep.insert(j);
+         C[tid_j] = 0;
+      }
+      else
+      {
+         // check previous Transition by instr_i.tid
+         // #todo show thread-transitive-red still holds.
+         C[tid_j] = mHB[j][tid_j];
+      }
+   }
+   DEBUG(" = " << MaxDep);
+   return MaxDep;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+template <typename Dependence>
+VectorClock::indices_t HappensBefore<Dependence>::covering(const index_t i,
+                                                           const instruction_t& instr) const
+{
+   return HappensBeforeBase::covering(i, instr, clock(i, instr));
+}
+
+//--------------------------------------------------------------------------------------------------
+
+template <typename Dependence>
+VectorClock HappensBefore<Dependence>::clock(const index_t i, const instruction_t& instr) const
+{
+   const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
+   const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
+   return tid == tid_i ? (*this)[i] : detail::create_clock<Dependence>(mE, mHB, i, instr);
+}
 
 //--------------------------------------------------------------------------------------------------
 
