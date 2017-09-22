@@ -165,7 +165,7 @@ public:
       /// @pre defined_on_prefix(i-1) && frontier_valid_for(i-1)
       assert(defined_on_prefix(i - 1) && frontier_valid_for(i - 1));
       DEBUGFNL(outputname(), "update", "[" << i << "]", "");
-      mHB.push_back(create_clock(i, mE[i].instr()));
+      mHB.push_back(create_clock(mE, i, mE[i].instr()));
       update_frontier(mE[i], mHB.back());
       /// @post defined_on_prefix(i) && frontier_valid_for(i)
       assert(defined_on_prefix(i) && frontier_valid_for(i));
@@ -271,47 +271,47 @@ private:
    {
       const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
       const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
-      return tid == tid_i ? (*this)[i] : create_clock(i, instr);
+      return tid == tid_i ? (*this)[i] : create_clock(mE, i, instr);
    }
 
-   /// @brief Creates the HappensBefore edges corresponding to instruction_t instr after
-   /// E' = pre(mE,i).
-   /// @details The function iterates backwards through E' to find for every program_model::Thread
-   /// tid such that tid != instr.tid() the maximal j such that happens_before(E'[j], instr). To
-   /// avoid traversing the whole sequence E', it maintains a minimum index min, which is
-   /// initialized by frontier[instr.tid()].min --- updated every time the clock is updated.
+   /// @brief Creates the HappensBefore edges to the given instruction after pre(execution,index),
+   /// defined as max{clock(j) | j in [1..index-1) and dependent(execution[j], instruction)}.
+   /// @note To see that it is not necessary to start from frntier(index, instruction.tid):
+   /// let last_seen_tid = frontier(index, instruction.tid)[tid].
+   /// for every j in dom(execution) | j > last_seen_tid it holds that 
+   /// j > frontier(index, instruction.tid)[execution[j].tid] and hence 
+   /// j -/>_pre(execution,index) instruction.tid
    /// @note We define a happens-before relation to be irreflexive. Therefore, the VectorClock
-   /// corresponding to Transition t refers to the previous Transition by t.instr.get_tid() in
-   /// clock[t.instr.tid]. However, frontier[t.instr.tid][t.instr.tid] = index.
+   /// corresponding to the given instruction after pre(execution,index) refers to the previous 
+   /// Transition by instruction.tid() in clock[instruction.tid]. However, 
+   /// frontier[t.instr.tid][t.instr.tid] = index.
 
-   VectorClock create_clock(const index_t i, const instruction_t& instr) const
+   VectorClock create_clock(const program_model::Execution& execution, const index_t index,
+                            const instruction_t& instruction) const
    {
-      const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
-      const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
+      VectorClock clock(execution.nr_threads());
+      DEBUGF(outputname(), "create_clock", "pre(execution, " << index << ")." << instruction, "\n");
+      DEBUG(" = MAX( " << clock);
 
-      /// @pre (frontier_valid_for(i-1) && instr.tid() == mE[i]) ||
-      ///      (frontier_valid_for(i) && instr.tid() != mE[i])
-      assert((frontier_valid_for(i - 1) && tid == tid_i) ||
-             (frontier_valid_for(i) && tid != tid_i));
-      VectorClock C = mFrontier[tid];
-      DEBUGF("\t" << outputname(), "create_clock", "[" << i << "] " << instr, " = MAX( " << C);
-      int min = min_element(C);
-      for (int j = i - 1; j > min; --j)
+      int min = min_element(clock);
+      const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
+      
+      for (int j = index-1; j > min; --j)
       {
-         const instruction_t& instr_j = mE[j].instr();
-         const auto tid_j = boost::apply_visitor(program_model::get_tid(), instr_j);
-         // j -!>_pre(E,i) instr.tid
-         if (j > C[tid_j] && Dependence::dependent(instr_j, instr))
+         const instruction_t& instruction_j = execution[j].instr();
+         const auto tid_j = boost::apply_visitor(program_model::get_tid(), instruction_j);
+         
+         // j -!>_pre(execution,index) instruction.tid
+         if (j > clock[tid_j] && Dependence::dependent(instruction_j, instruction))
          {
-            C.max(mHB[j]);
-            C[tid_j] = j;
-            min = min_element(C);
+            clock.max(mHB[j]);
+            clock[tid_j] = j;
+            min = min_element(clock);
             DEBUG(", " << mHB[j] << "[" << tid_j << ":=" << j << "]");
          }
       }
-      /// @note clock[instr.tid] < i.
-      DEBUGNL(" ) = " << C);
-      return C;
+      DEBUG(" ) = " << clock << "\n");
+      return clock;
    }
 
 }; // end class template HappensBefore<Dependence>
