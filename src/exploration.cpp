@@ -9,7 +9,7 @@ namespace exploration {
 void move_records(unsigned int nr, boost::filesystem::path target)
 {
    boost::filesystem::path source("record.txt");
-   target += "/record";
+   target /= "record";
    target += std::to_string(nr);
    target += ".txt";
    boost::filesystem::rename(source, target);
@@ -65,14 +65,12 @@ void ExplorationStatistics::stop_clock()
 
 //--------------------------------------------------------------------------------------------------
 
-void ExplorationStatistics::dump(const std::string& filename) const
+void ExplorationStatistics::dump(const boost::filesystem::path& filename) const
 {
-   std::ofstream ofs;
-   ofs.open(filename, std::ofstream::app);
+   std::ofstream ofs(filename.string(), std::ofstream::app);
    ofs << "nr_explorations\t" << mNrExplorations << std::endl
        << "cpu_time(s)\t" << mTimeCpu << std::endl
        << "wall_time(s)\t" << mTimeWall << std::endl;
-   ofs.close();
 }
 
 //--------------------------------------------------------------------------------------------------

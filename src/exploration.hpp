@@ -32,11 +32,10 @@ template <typename mode_t>
 boost::filesystem::path output_dir(const scheduler::Program& program, const mode_t& mode)
 {
    boost::filesystem::path output_dir(boost::filesystem::current_path());
-   output_dir += "/output/";
-   output_dir += program.file();
+   output_dir /= "output";
+   output_dir /= program.file();
    output_dir += std::to_string(program.nr_threads());
-   output_dir += "/";
-   output_dir += mode.path();
+   output_dir /= mode.path();
    return output_dir;
 }
 
@@ -73,7 +72,7 @@ public:
    void start_clock();
    void stop_clock();
 
-   void dump(const std::string& filename) const;
+   void dump(const boost::filesystem::path& filename) const;
 
 private:
 
@@ -235,10 +234,10 @@ private:
    void close()
    {
       mStatistics.stop_clock();
-      const std::string statistics = m_output_dir.string() + "/statistics.txt";
-      mStatistics.dump(statistics);
+      const boost::filesystem::path statistics_file = m_output_dir / "statistics.txt";
+      mStatistics.dump(statistics_file);
       mLogSchedules.close();
-      mMode.close(statistics);
+      mMode.close(statistics_file.string());
    }
 
    template <typename OutStream>
@@ -251,7 +250,9 @@ private:
 
    void dump_branch(const unsigned int nr) const
    {
-      std::ofstream ofs(m_output_dir.string() + "/exploration" + std::to_string(nr) + ".txt");
+      const boost::filesystem::path exploration_filename("exploration" + std::to_string(nr) + ".txt"); 
+      const boost::filesystem::path exploration_file = m_output_dir / exploration_filename;
+      std::ofstream ofs(exploration_file.string());
       for (const auto& t : mExecution)
       {
          dump_state(ofs, t);
