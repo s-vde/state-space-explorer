@@ -5,7 +5,7 @@
 
 // PROGRAM_MODEL
 #include "execution.hpp"
-#include "instruction_io.hpp"
+#include "visible_instruction_io.hpp"
 #include "state.hpp"
 
 // UTILS
@@ -35,6 +35,7 @@ namespace exploration
 
       using execution_t = Execution;
       using transition_t = execution_t::transition_t;
+		using instruction_t = transition_t::instruction_t;
 		using relation = std::vector<VectorClock>;
 		using index_t = typename execution_t::index_t;
 	
@@ -142,7 +143,7 @@ namespace exploration
 		 @complexity O(n^2) with n = |clock|.
 		 */
 		VectorClock::indices_t covering(
-			const index_t i, const Instruction& instr, VectorClock C) const;
+			const index_t i, const instruction_t& instr, VectorClock C) const;
 		
 		// PRE/POST CONDITIONS
 		
@@ -219,7 +220,7 @@ namespace exploration
 		/// with the given instruction (and satisfies the given other conditions). Returns 0 iff there 
 		/// is no such Transition.
 
-		VectorClock::index_t max_dependent(const index_t index, const Instruction& instruction,
+		VectorClock::index_t max_dependent(const index_t index, const instruction_t& instruction,
 													  const bool apply_thread_transitive_reduction=true, 
 													  const bool apply_coenabled=false) const
       {
@@ -231,13 +232,15 @@ namespace exploration
 			DEBUGF(outputname(), "max_dependent", 
 					 "[" << index << "], " << instruction << (apply_coenabled ? ", coenabled" : ""), 
 					 "\n");
-					 
+			
+			const auto tid = boost::apply_visitor(program_model::get_tid(), instruction); 
+			
 			if (apply_thread_transitive_reduction) 
-			{ 
-				thread_transitive_reduction(index, instruction.tid(), C); 
+			{
+				thread_transitive_reduction(index, tid, C); 
 			}
 			// exclude instr.tid-dependencies
-			C[instruction.tid()] = 0; 
+			C[tid] = 0; 
 			
 			auto max_it = std::max_element(C.begin(), C.end());
       
@@ -269,7 +272,7 @@ namespace exploration
 		// #todo coenabledness
         VectorClock::indices_t max_dependent_per_thread(
             const index_t i,
-            const Instruction& instr,
+            const instruction_t& instr,
             const bool use_thread_transitive_reduction=true) const
         {
 			/// @pre frontier_valid_for(i)
@@ -277,20 +280,22 @@ namespace exploration
             DEBUGFNL("\t" << outputname(), "max_dependent_per_thread", "[" << i << "], " << instr, "");
             VectorClock::indices_t MaxDep{};
             VectorClock C = clock(i, instr);
+				const auto tid = boost::apply_visitor(program_model::get_tid(), instr); 
             if (use_thread_transitive_reduction) {
-                thread_transitive_reduction(i, instr.tid(), C);
+                thread_transitive_reduction(i, tid, C);
             }
-            C[instr.tid()] = 0; // exclude instr.tid-dependencies
+            C[tid] = 0; // exclude instr.tid-dependencies
             VectorClock::index_t j;
             while (j = max_element(C), j > 0) {
-                const Instruction& instr_j = mE[j].instr();
+                const instruction_t& instr_j = mE[j].instr();
+					 const auto tid_j = boost::apply_visitor(program_model::get_tid(), instr_j); 
                 if (Dependence::dependent(instr_j, instr)) {
                     MaxDep.insert(j);
-                    C[instr_j.tid()] = 0;
+                    C[tid_j] = 0;
                 } else {
                     // check previous Transition by instr_i.tid
                     // #todo show thread-transitive-red still holds.
-                    C[instr_j.tid()] = mHB[j][instr_j.tid()];
+                    C[tid_j] = mHB[j][tid_j];
                 }
             }
             DEBUG(" = " << MaxDep);
@@ -303,7 +308,7 @@ namespace exploration
          !exists k . hb(E[j],E[k]) && hb(E[k],E[i])</code>.
          @complexity O(n^2) with n = |clock|.
          */
-        VectorClock::indices_t covering(const index_t i, const Instruction& instr) const
+        VectorClock::indices_t covering(const index_t i, const instruction_t& instr) const
         {
 			return HappensBeforeBase::covering(i, instr, clock(i, instr));
         }
@@ -315,16 +320,15 @@ namespace exploration
          @note Yields undefined behaviour if instr.tid == mE[i].instr.tid
          but !defined_on_prefix(i).
          */
-        VectorClock clock(const index_t i, const Instruction& instr) const
+        VectorClock clock(const index_t i, const instruction_t& instr) const
         {
-            return
-                instr.tid() == mE[i].instr().tid()
-                ? (*this)[i]
-                : create_clock(i, instr);
+			  	const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
+				const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
+            return tid == tid_i ? (*this)[i] : create_clock(i, instr);
         }
 
         /**
-         @brief Creates the HappensBefore edges corresponding to Instruction instr 
+         @brief Creates the HappensBefore edges corresponding to instruction_t instr 
 		 after E' = pre(mE,i).
          
          @details The function iterates backwards through E' to find for every 
@@ -338,25 +342,29 @@ namespace exploration
          refers to the previous Transition by t.instr.get_tid() in clock[t.instr.tid].
          However, frontier[t.instr.tid][t.instr.tid] = index.
          */
-        VectorClock create_clock(const index_t i, const Instruction& instr) const
+        VectorClock create_clock(const index_t i, const instruction_t& instr) const
         {
+			   const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
+			   const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
+			  
             /// @pre (frontier_valid_for(i-1) && instr.tid() == mE[i]) ||
             ///      (frontier_valid_for(i) && instr.tid() != mE[i])
             assert(
-                (frontier_valid_for(i-1) && instr.tid() == mE[i].instr().tid()) ||
-                (frontier_valid_for(i) && instr.tid() != mE[i].instr().tid())
+                (frontier_valid_for(i-1) && tid == tid_i) ||
+                (frontier_valid_for(i) && tid != tid_i)
             );
-            VectorClock C = mFrontier[instr.tid()];
+            VectorClock C = mFrontier[tid];
             DEBUGF("\t" << outputname(), "create_clock", "[" << i << "] " << instr, " = MAX( " << C);
             int min = min_element(C);
             for (int j = i-1; j > min; --j) {
-                const Instruction& instr_j = mE[j].instr();
+                const instruction_t& instr_j = mE[j].instr();
+					 const auto tid_j = boost::apply_visitor(program_model::get_tid(), instr_j);
                 // j -!>_pre(E,i) instr.tid
-                if (j > C[instr_j.tid()] && Dependence::dependent(instr_j, instr)) {
+                if (j > C[tid_j] && Dependence::dependent(instr_j, instr)) {
                     C.max(mHB[j]);
-                    C[instr_j.tid()] = j;
-					min = min_element(C);
-                    DEBUG(", " << mHB[j] << "[" << instr_j.tid() << ":=" << j << "]");
+                    C[tid_j] = j;
+						  min = min_element(C);
+                    DEBUG(", " << mHB[j] << "[" << tid_j << ":=" << j << "]");
                 }
             }
             /// @note clock[instr.tid] < i.

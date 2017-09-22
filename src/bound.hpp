@@ -5,9 +5,9 @@
 
 // PROGRAM_MODEL
 #include "execution.hpp"
-#include "instruction_io.hpp"
 #include "transition_io.hpp"
 #include "state.hpp"
+#include "visible_instruction_io.hpp"
 
 // UTILS
 #include "debug.hpp"
@@ -97,8 +97,8 @@ public:
    {
       /// @pre mState.size() == transition.index()
       assert(mState.size() == transition.index());
-      mState.emplace_back(bound_function_t::value(execution, mState, transition.index()-1,
-                                               transition.instr().tid()));
+      const auto tid = boost::apply_visitor(program_model::get_tid(), transition.instr());
+      mState.emplace_back(bound_function_t::value(execution, mState, transition.index()-1, tid));
       DEBUGF(outputname(), "update_state", transition.instr(), to_string_post_state(transition) 
              << ".bound_value = " << mState.back().bound_value() << "\n");
    }

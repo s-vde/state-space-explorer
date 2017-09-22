@@ -143,9 +143,10 @@ public:
    {
       /// @pre mState.size() == t.index()+1 (i.e. did not yet pop_back())
       assert(mState.size() == transition.index()+1);
-      mState[transition.index()-1].sleepset().add(transition.instr().tid());
+      const auto tid = boost::apply_visitor(program_model::get_tid(), transition.instr());
+      mState[transition.index()-1].sleepset().add(tid);
       DEBUGF(outputname(), "update_after_exploration", to_string_pre_state(transition),
-             to_string_pre_state(transition) << ".sleep += { " << transition.instr().tid() << " } = "
+             to_string_pre_state(transition) << ".sleep += { " << tid << " } = "
              << mState.back().sleepset());
       mSufficientSet.update_after_exploration(transition, mState[transition.index()-1]);
    }

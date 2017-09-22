@@ -1,9 +1,12 @@
 
 #include "sleep_sets.hpp"
-#include <instruction_io.hpp>
+
+#include <visible_instruction_io.hpp>
+
+#include <container_output.hpp>
+
 #include <assert.h>
 #include <fstream>
-#include "container_output.hpp"
 
 namespace scheduler
 {
@@ -42,7 +45,7 @@ namespace scheduler
 		DEBUGFNL("SleepSets", "initialize", "", "mSleep = " << mSleep);
 	}
 	
-	void SleepSets::update_sleep(const TaskPool& pool, const Instruction& current)
+	void SleepSets::update_sleep(const TaskPool& pool, const instruction_t& current)
 	{
 		DEBUGF("SleepSets", "update_sleep", current, "");
 		mSleep.wake_up(

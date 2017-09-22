@@ -301,7 +301,8 @@ namespace exploration
         
         void update_state(const execution& E, const transition& t)
         {
-            mState.emplace_back(BoundFunction::value(E, mState, t.index()-1, t.instr().tid()));
+            const auto tid = boost::apply_visitor(program_model::get_tid(), t.instr());
+            mState.emplace_back(BoundFunction::value(E, mState, t.index()-1, tid));
             DEBUGFNL(outputname(), "update_state", t.instr(), to_string_post_state(t) << ".boundvalue = " << mState.back().boundvalue());
         }
         

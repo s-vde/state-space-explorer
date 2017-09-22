@@ -56,7 +56,7 @@ namespace exploration
 			VectorClock first_seen(mE.nr_threads());
 			VectorClock last_seen(mE.nr_threads());
 			for (const auto& i : subseq) {
-				const Thread::tid_t tid = mE[i].instr().tid();
+				const auto tid = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
 				const VectorClock& C = (*this)[i];
 				if (first_seen[tid] == 0) {
 					auto seen_before = utils::algo::find_if_with_index(
@@ -117,7 +117,8 @@ namespace exploration
 		std::transform(
 			indices.begin(), indices.end(),
 			std::inserter(T, T.end()),
-			[this] (const auto& i) { return mE[i].instr().tid(); }
+			[this] (const auto& i) {
+				return boost::apply_visitor(program_model::get_tid(), mE[i].instr()); }
 		);
 		return T;
 	}
@@ -129,23 +130,26 @@ namespace exploration
 	
 	void HappensBeforeBase::update_frontier(const transition_t& t, const VectorClock& clock)
 	{
-		mFrontier[t.instr().tid()] = clock;
-		mFrontier[t.instr().tid()][t.instr().tid()] = t.index();
+		const auto tid = boost::apply_visitor(program_model::get_tid(), t.instr());
+		mFrontier[tid] = clock;
+		mFrontier[tid][tid] = t.index();
 		++mIndex;
 	}
 	
 	VectorClock::indices_t HappensBeforeBase::covering(
-		const index_t i, const Instruction& instr, VectorClock C) const
+		const index_t i, const instruction_t& instr, VectorClock C) const
 	{
-		thread_transitive_reduction(i, instr.tid(), C);
-		C[instr.tid()] = 0; // exclude instr.tid-dependencies
+		const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
+		thread_transitive_reduction(i, tid, C);
+		C[tid] = 0; // exclude instr.tid-dependencies
 		VectorClock::indices_t Covering{};
 		VectorClock::value_t j = 0;
 		// in every loop-iteration an entry in C is set to 0.
 		while (j = max_element(C), j > 0) {
 			Covering.insert(j);
 			transitive_reduction(j, C);
-			C[mE[j].instr().tid()] = 0;
+			const auto tid_j = boost::apply_visitor(program_model::get_tid(), mE[j].instr());
+			C[tid_j] = 0;
 		}
 		DEBUGFNL("\t" << outputname(), "covering", "[" << i << "], " << instr, " = " << Covering);
 		return Covering;
@@ -190,14 +194,13 @@ namespace exploration
 	
 	bool HappensBeforeBase::happens_before(const index_t i1, const VectorClock& clock2) const
 	{
-		return clock2[mE[i1].instr().tid()] >= i1;
+		const auto tid = boost::apply_visitor(program_model::get_tid(), mE[i1].instr());
+		return clock2[tid] >= i1;
 	}
 	
 	const VectorClock& HappensBeforeBase::previous_by(const Thread::tid_t& tid) const
 	{
-		return
-		mE[mIndex].instr().tid() == tid
-		? mHB[mHB[mIndex][tid]]
-		: mFrontier[tid];
+		const auto tid_index = boost::apply_visitor(program_model::get_tid(), mE[mIndex].instr());
+		return tid_index == tid ? mHB[mHB[mIndex][tid]] : mFrontier[tid];
 	}
 } // end namespace exploration

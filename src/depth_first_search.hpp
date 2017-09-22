@@ -124,9 +124,9 @@ public:
       /// @pre mState.size() == t.index()+1 (i.e. did not yet pop_back())
       assert(mState.size() == transition.index()+1);
       DEBUGFNL(outputname(), "update_after_exploration", to_short_string(transition), "");
-      DEBUGNL("\t" << to_string_pre_state(transition) 
-              << ".done.add(" << transition.instr().tid() << ")");
-      mState[transition.index()-1].add_to_done(transition.instr().tid()); // t.pre
+		const auto tid = boost::apply_visitor(program_model::get_tid(), transition.instr());
+      DEBUGNL("\t" << to_string_pre_state(transition) << ".done.add(" << tid << ")");
+      mState[transition.index()-1].add_to_done(tid); // t.pre
       mReduction.update_after_exploration(transition);
    }
    

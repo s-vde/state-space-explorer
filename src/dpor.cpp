@@ -95,7 +95,8 @@ void dpor_base::update_state(const execution_t& execution, const transition_t& t
 {
 	/// @pre mState.size() == transition.index()
 	assert(mState.size() == transition.index());
-   mState.back().add_to_backtrack(transition.instr().tid());
+   const auto tid = boost::apply_visitor(program_model::get_tid(), transition.instr());
+   mState.back().add_to_backtrack(tid);
 	mState.emplace_back(SufficientSet{{}, SleepSet(mState.back().sleepset(), transition, Dependence())});
 	mHB.update(transition.index());
 	/// @post mState.size() == transition.index()+1

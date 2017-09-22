@@ -33,10 +33,8 @@ namespace bound_functions
        
         static value_t step_value(const transition_t& last, const Thread::tid_t& tid)
         {
-            return
-                context_switch(last.instr().tid(), tid) &&
-                last.post().is_enabled(last.instr().tid())
-                ? 1 : 0;
+            const auto last_tid = boost::apply_visitor(program_model::get_tid(), last.instr());
+            return (context_switch(last_tid, tid) && last.post().is_enabled(last_tid)) ? 1 : 0;
         }
         
         /**
@@ -86,7 +84,9 @@ namespace bound_functions
             assert(index > 0);
             unsigned int j;
             for (j = index-1; j > 1; --j) {
-                if (Preemptions::context_switch(E[j-1].instr().tid(), E[j].instr().tid())) {
+                const auto tid_ = boost::apply_visitor(program_model::get_tid(), E[j-1].instr());
+                const auto tid = boost::apply_visitor(program_model::get_tid(), E[j].instr());
+                if (Preemptions::context_switch(tid_, tid)) {
                     return j;
                 }
             }
