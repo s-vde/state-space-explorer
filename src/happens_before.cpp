@@ -1,7 +1,6 @@
 
 #include "happens_before.hpp"
 #include "algo.hpp"
-#include "color_output.hpp"
 
 
 namespace exploration {

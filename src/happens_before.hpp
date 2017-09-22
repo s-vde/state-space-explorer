@@ -6,6 +6,7 @@
 #include "state.hpp"
 #include "visible_instruction_io.hpp"
 
+#include "color_output.hpp"
 #include "container_output.hpp"
 #include "debug.hpp"
 
@@ -19,6 +20,62 @@
 
 
 namespace exploration {
+
+namespace detail {
+
+using execution_t = program_model::Execution;
+using transition_t = execution_t::transition_t;
+using instruction_t = transition_t::instruction_t;
+
+/// @brief Creates the HappensBefore edges to the given instruction after pre(execution,index),
+/// defined as max{clock(j) | j in [1..index-1) and dependent(execution[j], instruction)}.
+/// @note To see that it is not necessary to start from frntier(index, instruction.tid):
+/// let last_seen_tid = frontier(index, instruction.tid)[tid].
+/// for every j in dom(execution) | j > last_seen_tid it holds that
+/// j > frontier(index, instruction.tid)[execution[j].tid] and hence
+/// j -/>_pre(execution,index) instruction.tid
+/// @note We define a happens-before relation to be irreflexive. Therefore, the VectorClock
+/// corresponding to the given instruction after pre(execution,index) refers to the previous
+/// Transition by instruction.tid() in clock[instruction.tid]. However,
+/// frontier[t.instr.tid][t.instr.tid] = index.
+
+template <typename Dependence>
+VectorClock create_clock(const execution_t& execution,
+                         const std::vector<VectorClock> happens_before_relation,
+                         const execution_t::index_t index, const instruction_t& instruction)
+{
+   assert(happens_before_relation.size() >= index - 1);
+
+   VectorClock clock(execution.nr_threads());
+   DEBUGF(text_color("HappensBefore", utils::io::Color::YELLOW), "create_clock",
+          "pre(execution, " << index << ")." << instruction, "\n");
+   DEBUG(" = MAX( ");
+
+   int min = min_element(clock);
+   const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
+
+   for (int j = index - 1; j > min; --j)
+   {
+      const instruction_t& instruction_j = execution[j].instr();
+      const auto tid_j = boost::apply_visitor(program_model::get_tid(), instruction_j);
+
+      // j -!>_pre(execution,index) instruction.tid
+      if (j > clock[tid_j] && Dependence::dependent(instruction_j, instruction))
+      {
+         clock.max(happens_before_relation[j]);
+         clock[tid_j] = j;
+         min = min_element(clock);
+         DEBUG(", " << happens_before_relation[j] << "[" << tid_j << ":=" << j << "]");
+      }
+   }
+   DEBUG(" ) = " << clock << "\n");
+   return clock;
+}
+
+} // namespace detail
+
+//--------------------------------------------------------------------------------------------------
+
 
 class HappensBeforeBase
 {
@@ -165,7 +222,7 @@ public:
       /// @pre defined_on_prefix(i-1) && frontier_valid_for(i-1)
       assert(defined_on_prefix(i - 1) && frontier_valid_for(i - 1));
       DEBUGFNL(outputname(), "update", "[" << i << "]", "");
-      mHB.push_back(create_clock(mE, i, mE[i].instr()));
+      mHB.push_back(detail::create_clock<Dependence>(mE, mHB, i, mE[i].instr()));
       update_frontier(mE[i], mHB.back());
       /// @post defined_on_prefix(i) && frontier_valid_for(i)
       assert(defined_on_prefix(i) && frontier_valid_for(i));
@@ -271,48 +328,11 @@ private:
    {
       const auto tid = boost::apply_visitor(program_model::get_tid(), instr);
       const auto tid_i = boost::apply_visitor(program_model::get_tid(), mE[i].instr());
-      return tid == tid_i ? (*this)[i] : create_clock(mE, i, instr);
-   }
-
-   /// @brief Creates the HappensBefore edges to the given instruction after pre(execution,index),
-   /// defined as max{clock(j) | j in [1..index-1) and dependent(execution[j], instruction)}.
-   /// @note To see that it is not necessary to start from frntier(index, instruction.tid):
-   /// let last_seen_tid = frontier(index, instruction.tid)[tid].
-   /// for every j in dom(execution) | j > last_seen_tid it holds that 
-   /// j > frontier(index, instruction.tid)[execution[j].tid] and hence 
-   /// j -/>_pre(execution,index) instruction.tid
-   /// @note We define a happens-before relation to be irreflexive. Therefore, the VectorClock
-   /// corresponding to the given instruction after pre(execution,index) refers to the previous 
-   /// Transition by instruction.tid() in clock[instruction.tid]. However, 
-   /// frontier[t.instr.tid][t.instr.tid] = index.
-
-   VectorClock create_clock(const program_model::Execution& execution, const index_t index,
-                            const instruction_t& instruction) const
-   {
-      VectorClock clock(execution.nr_threads());
-      DEBUGF(outputname(), "create_clock", "pre(execution, " << index << ")." << instruction, "\n");
-      DEBUG(" = MAX( " << clock);
-
-      int min = min_element(clock);
-      const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
-      
-      for (int j = index-1; j > min; --j)
-      {
-         const instruction_t& instruction_j = execution[j].instr();
-         const auto tid_j = boost::apply_visitor(program_model::get_tid(), instruction_j);
-         
-         // j -!>_pre(execution,index) instruction.tid
-         if (j > clock[tid_j] && Dependence::dependent(instruction_j, instruction))
-         {
-            clock.max(mHB[j]);
-            clock[tid_j] = j;
-            min = min_element(clock);
-            DEBUG(", " << mHB[j] << "[" << tid_j << ":=" << j << "]");
-         }
-      }
-      DEBUG(" ) = " << clock << "\n");
-      return clock;
+      return tid == tid_i ? (*this)[i] : detail::create_clock<Dependence>(mE, mHB, i, instr);
    }
 
 }; // end class template HappensBefore<Dependence>
+
+//--------------------------------------------------------------------------------------------------
+
 } // end namespace exploration
