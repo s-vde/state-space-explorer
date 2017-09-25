@@ -76,12 +76,12 @@ void ExplorationStatistics::dump(const boost::filesystem::path& filename) const
 //--------------------------------------------------------------------------------------------------
 
 
-ExplorationBase::ExplorationBase(const scheduler::Program& P,
+ExplorationBase::ExplorationBase(const scheduler::program_t& program,
                                  const unsigned int max_nr_explorations)
-: mProgram(P)
+: mProgram(program)
 , mSchedule()
 , mMaxNrExplorations(max_nr_explorations)
-, mExecution(mProgram.nr_threads())
+, mExecution()
 , mStatistics()
 , mDone(false)
 , mLogSchedules()
@@ -101,7 +101,7 @@ void ExplorationBase::run_program()
 {
    DEBUGFNL(outputname(), "run_program", "", "under schedule " << mSchedule);
    scheduler::run_under_schedule(mProgram, mSchedule);
-   mExecution = program_model::Execution(mProgram.nr_threads());
+   mExecution = program_model::Execution();
    if (!utils::io::read_from_file("record.txt", mExecution))
    {
       ERROR(full_name(), "run_program"); /* #todo Some error handling */

@@ -5,10 +5,9 @@
 
 state_space_explorer_build=`echo $1`
 llvm_base=`echo $2`
-input_dir=`echo $3`
-input_program=`echo $4`
-nr_threads=`echo $5`
-compiler_options=`echo $6`
+input_program=`echo $3`
+output_dir=`echo $4`
+compiler_options=`echo $5`
 
 
 ####################
@@ -25,15 +24,13 @@ llvm_bin=${llvm_base}/build/bin
 input_filename=$(basename "${input_program}")
 input_extension="${input_filename##*.}"
 
-compiler_options+=" -O0 -g -DNR_THREADS=${nr_threads} -pthread -emit-llvm "
+compiler_options+=" -O0 -g -pthread -emit-llvm "
 
 if [ ${input_extension} == "c" ]; then
    compiler=${llvm_bin}/clang
 else
    compiler=${llvm_bin}/clang++
 fi
-
-output_dir=${input_dir}/instrumented
 
 
 ####################
@@ -42,7 +39,7 @@ output_dir=${input_dir}/instrumented
 echo Instrumenting ${input_program}
 
 test -d ${output_dir} || mkdir -p ${output_dir}
-${compiler} ${compiler_options} -c ${input_dir}/${input_program} -o ${output_dir}/${input_filename}.bc
+${compiler} ${compiler_options} -c ${input_program} -o ${output_dir}/${input_filename}.bc
 
 echo [record-replay] run instrumentation pass
 ${llvm_bin}/opt -load ${pass_build} ${pass_name} \

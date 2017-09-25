@@ -49,7 +49,7 @@ VectorClock create_clock(const execution_t& execution,
    VectorClock clock(execution.nr_threads());
    DEBUGF(text_color("HappensBefore", utils::io::Color::YELLOW), "create_clock",
           "pre(execution, " << index << ")." << instruction, "\n");
-   DEBUG(" = MAX( ");
+   DEBUG(" = MAX( " << clock);
 
    int min = min_element(clock);
    const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
@@ -133,7 +133,7 @@ public:
 
    void pop_back();
 
-   /// @brief Performs a reset of mFrontier and sets mIndex to 0.
+   /// @brief Reset this HappensBeforeBase to the potentially updated underlying execution mE.
 
    void reset();
 

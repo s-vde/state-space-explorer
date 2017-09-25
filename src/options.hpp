@@ -1,5 +1,5 @@
 
-#include <program.hpp>
+#include <replay.hpp>
 
 #include <boost/program_options.hpp>
 
@@ -26,8 +26,7 @@ public:
          "sufficient-set",
          boost::program_options::value<std::string>()->default_value("persistent"),
          "the sufficient set implementation to be used with DPOR based exploration (values: "
-         "persistent)")("n", boost::program_options::value<unsigned int>(),
-                        "the number of threads in the system under test");
+         "persistent)");
    }
 
    void parse(int argc, char* argv[])
@@ -59,15 +58,13 @@ inline std::ostream& operator<<(std::ostream& os, const options& opt)
 //----------------------------------------------------------------------------------------------------------------------
 
 
-std::pair<scheduler::Program, unsigned int> get_required_options(const options& opt)
+std::pair<scheduler::program_t, unsigned int> get_required_options(const options& opt)
 {
    try
    {
       const boost::filesystem::path sut{opt.map()["i"].as<std::string>()};
-      const unsigned int nr_threads = opt.map()["n"].as<unsigned int>();
       const unsigned int max = opt.map()["max"].as<unsigned int>();
-      return {scheduler::Program{sut.parent_path().string(), sut.filename().string(), nr_threads},
-              max};
+      return {sut.string(), max};
    }
    catch (const boost::bad_any_cast&)
    {

@@ -120,9 +120,15 @@ void HappensBeforeBase::pop_back()
 
 void HappensBeforeBase::reset()
 {
-   std::size_t size = mFrontier.size();
+   const auto size = mE.nr_threads();
+   
+   // reset the frontier
    mFrontier = frontier_t(size, VectorClock(size));
    mIndex = 0;
+   
+   // grow / narrow down the VectorClocks
+   assert(mHB.size() <= mE.size()+1);
+   std::for_each(mHB.begin(), mHB.end(), [size](auto& clock) { clock = VectorClock{clock, size}; });
 }
 
 //--------------------------------------------------------------------------------------------------

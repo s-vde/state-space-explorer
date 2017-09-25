@@ -40,11 +40,10 @@ In order to instrument an input program, run
 
 ```
 ./instrument.sh
-     <record_replay_build_dir>
+     <state_space_explorer_build_dir>
      <path_to_llvm>
-     <path_to_input_program_directory>
-     <input_program_filename_with_extension>
-     <nr_of_threads>
+     <input_program_filepath>
+     <output_directory>
      (compiler_options)
 ```
 where all path variables can be either relative or absolute to the current directory.
@@ -56,14 +55,12 @@ The State-Space Explorer can be run as follows:
 ```
 ./depth_first_search 
     --i <input_program> 
-    --n <nr_threads> 
     --max <max_nr_executions>
 ```
 
 ```
 ./bounded_search
     --i <input_program> 
-    --n <nr_threads> 
     --max <max_nr_executions>
     --bound-function <bound_function> 
     --bound <bound_value> 
@@ -72,7 +69,6 @@ The State-Space Explorer can be run as follows:
 ```
 ./dpor 
     --i <input_program> 
-    --n <nr_threads> 
     --max <max_nr_executions>
     --sufficient-set <sufficient_set>
 ```
@@ -82,7 +78,6 @@ where
 - `<bound_function> in { preemptions }`
 - `<bound>` is an integer
 - `<input_program>` is the name of the input program, without extension, and without suffix corresponding to the number of threads
-- `<nr_threads>` is the number of threads in the input program
 - `<max_nr_executions>` is the maximal number of executions that the exploration is allowed to see.
 
 The exploration dumps records of the performed executions

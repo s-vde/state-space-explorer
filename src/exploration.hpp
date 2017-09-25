@@ -29,14 +29,10 @@ namespace exploration {
 namespace {
 
 template <typename mode_t>
-boost::filesystem::path output_dir(const scheduler::Program& program, const mode_t& mode)
+boost::filesystem::path output_dir(const scheduler::program_t& program, const mode_t& mode)
 {
-   boost::filesystem::path output_dir(boost::filesystem::current_path());
-   output_dir /= "output";
-   output_dir /= program.file();
-   output_dir += std::to_string(program.nr_threads());
-   output_dir /= mode.path();
-   return output_dir;
+   const auto filename = boost::filesystem::path(program).filename();
+   return boost::filesystem::current_path() / "output" / filename.string() / mode.path();
 }
 
 } // end namespace
@@ -92,7 +88,7 @@ private:
 class ExplorationBase
 {
 public:
-   ExplorationBase(const scheduler::Program& P, const unsigned int max_nr_explorations);
+   ExplorationBase(const scheduler::program_t& program, const unsigned int max_nr_explorations);
 
    ExplorationStatistics statistics() const;
 
@@ -101,7 +97,7 @@ protected:
    using execution = program_model::Execution;
    using transition = typename execution::transition_t;
 
-   scheduler::Program mProgram;
+   scheduler::program_t mProgram;
    scheduler::schedule_t mSchedule;
    unsigned int mMaxNrExplorations;
    execution mExecution;
@@ -131,11 +127,11 @@ class Exploration : public ExplorationBase
 public:
 
    template <typename... Args>
-   explicit Exploration(const scheduler::Program& P, const unsigned int max_nr_explorations,
+   explicit Exploration(const scheduler::program_t& program, const unsigned int max_nr_explorations,
                         Args... args)
-   : ExplorationBase(P, max_nr_explorations)
+   : ExplorationBase(program, max_nr_explorations)
    , mMode(mExecution, std::forward<Args>(args)...)
-   , m_output_dir(output_dir(P, mMode))
+   , m_output_dir(output_dir(program, mMode))
    {
    }
 
@@ -159,8 +155,8 @@ public:
       mStatistics.start_clock();
       while (!mDone && mStatistics.nr_explorations() < mMaxNrExplorations)
       {
-         mMode.reset();
          run_program();
+         mMode.reset();
          if (mStatistics.nr_explorations() > 0 || mMode.check_valid(mExecution.contains_locks()))
          {
             update_state(from);
