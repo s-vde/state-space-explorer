@@ -287,7 +287,7 @@ VectorClock::index_t HappensBefore<Dependence>::max_dependent(
    // exclude instr.tid-dependencies
    C[tid] = 0;
 
-   auto max_it = std::max_element(C.begin(), C.end());
+   auto max_it = std::max_element(C.cbegin(), C.cend());
 
    //
    if (apply_coenabled)
@@ -295,9 +295,9 @@ VectorClock::index_t HappensBefore<Dependence>::max_dependent(
       while (*max_it > 0 && (!Dependence::dependent(mE[*max_it].instr(), instruction) ||
                              !Dependence::coenabled(mE[*max_it].instr(), instruction)))
       {
-         program_model::Thread::tid_t max_tid = std::distance(C.begin(), max_it);
+         program_model::Thread::tid_t max_tid = std::distance(C.cbegin(), max_it);
          C[max_tid] = mHB[*max_it][max_tid];
-         max_it = std::max_element(C.begin(), C.end());
+         max_it = std::max_element(C.cbegin(), C.cend());
       }
    }
 

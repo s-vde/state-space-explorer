@@ -29,6 +29,11 @@ public:
    /// @brief Constructs a n-size 0-value VectorClock.
 
    explicit VectorClock(std::size_t n);
+   
+   /// @brief Constructs an n-size VectorClock from the first n values of other. If other's size is 
+   /// less than n, the last n-other.size values of the new VectorClock are initialized with 0.
+   
+   VectorClock(const VectorClock& other, std::size_t n);
 
    /// @brief Transforms this VectorClock into max(*this, other) =
    /// <max(*this[0], other[0]), ..., max(*this[mSize-1], other[mSize-1])>

@@ -24,6 +24,8 @@ add_subdirectory(${SCHEDULER}   ${CMAKE_CURRENT_BINARY_DIR}/scheduler)
 set(LLVM_PASS   ${RECORD_REPLAY}/src/llvm-pass)
 add_subdirectory(${LLVM_PASS}   ${CMAKE_CURRENT_BINARY_DIR}/llvm-pass)
 
+add_subdirectory(tests)
+
 
 ####################
 # INCLUDES

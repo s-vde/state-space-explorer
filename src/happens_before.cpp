@@ -79,10 +79,10 @@ VectorClock::values_t HappensBeforeBase::front(const VectorClock::indices_t& sub
          if (first_seen[tid] == 0)
          {
             auto seen_before = utils::algo::find_if_with_index(
-               C.begin(), C.end(), [&first_seen, &last_seen](const auto& tid_, const auto& val) {
+               C.cbegin(), C.cend(), [&first_seen, &last_seen](const auto& tid_, const auto& val) {
                   return last_seen[tid_] > 0 && first_seen[tid_] <= val && val <= last_seen[tid_];
                });
-            if (seen_before != C.end())
+            if (seen_before != C.cend())
             {
                DEBUGNL(tabs() << "\t\t" << i << " notin Front");
             }
