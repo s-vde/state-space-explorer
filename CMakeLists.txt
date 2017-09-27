@@ -6,6 +6,8 @@ set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lboost_filesystem -lboost_program_op
 ####################
 # DEPENDENCIES
 
+set(LLVM_DIR    ${LLVM_BUILD_DIR}/lib/cmake/llvm)
+
 set(CPP_UTILS   ${CMAKE_CURRENT_SOURCE_DIR}/libs/cpp-utils)
 include_directories(${CPP_UTILS}/src)
 
@@ -40,10 +42,8 @@ set(BOUND_FUNCTIONS_SOURCES
 )
 
 set(SUFFICIENT_SETS_SOURCES
-  src/sufficient_sets/bound_persistent_set.cpp
   src/sufficient_sets/persistent_set.cpp
   src/sufficient_sets/sleep_set.cpp
-  src/sufficient_sets/source_set.cpp
   src/sufficient_sets/sufficient_set.cpp
 )
 
@@ -76,7 +76,6 @@ add_executable(depth_first_search
 target_link_libraries(depth_first_search RecordReplayProgramModel)
 
 add_executable(dpor
-  src/bound.cpp
   src/dependence.cpp
   src/depth_first_search.cpp
   src/dpor.cpp

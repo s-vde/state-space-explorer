@@ -22,7 +22,7 @@ Record-Replay requires LLVM and Clang 4.0 (see also [README](https://github.com/
 State-Space Explorer can be built using cmake. By default the build process will look for and use an installed LLVM. A custom built LLVM can be specified as follows:
 
 ```
-cmake -DLLVM_DIR=<path_to_llvm_build_dir>/lib/cmake/llvm 
+cmake -DLLVM_BUILD_DIR=<path_to_llvm_build_dir>
 ```
 
 The build process will produce a number of executables, corresponding to different exploration modes:
