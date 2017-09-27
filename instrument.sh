@@ -13,11 +13,11 @@ compiler_options=`echo $5`
 ####################
 # VARIABLES
 
-here=`pwd .`
+record_replay_build=${state_space_explorer_build}/libs/record-replay/src
 
-pass_build=${state_space_explorer_build}/llvm-pass/LLVMRecordReplayPass.dylib
+pass_build=${record_replay_build}/llvm-pass/LLVMRecordReplayPass.dylib
 pass_name="-instrument-record-replay-lw"
-scheduler_build=${state_space_explorer_build}/scheduler
+scheduler_build=${record_replay_build}/scheduler
 
 llvm_bin=${llvm_base}/build/bin
 

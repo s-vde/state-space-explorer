@@ -10,19 +10,15 @@ set(CPP_UTILS   ${CMAKE_CURRENT_SOURCE_DIR}/libs/cpp-utils)
 include_directories(${CPP_UTILS}/src)
 
 set(RECORD_REPLAY   ${CMAKE_CURRENT_SOURCE_DIR}/libs/record-replay)
+
 set(PROGRAM_MODEL   ${RECORD_REPLAY}/src/program-model)
 include_directories(${PROGRAM_MODEL})
-
-set(PROGRAM_MODEL    ${RECORD_REPLAY}/src/program-model)
-add_subdirectory(${PROGRAM_MODEL}   ${CMAKE_CURRENT_BINARY_DIR}/program-model)
 
 set(SCHEDULER   ${RECORD_REPLAY}/src/scheduler)
 set(CUSTOM_STRATEGIES   ${CMAKE_CURRENT_SOURCE_DIR}/src/selection_strategies)
 include_directories(${SCHEDULER})
-add_subdirectory(${SCHEDULER}   ${CMAKE_CURRENT_BINARY_DIR}/scheduler)
 
-set(LLVM_PASS   ${RECORD_REPLAY}/src/llvm-pass)
-add_subdirectory(${LLVM_PASS}   ${CMAKE_CURRENT_BINARY_DIR}/llvm-pass)
+add_subdirectory(${RECORD_REPLAY})
 
 add_subdirectory(tests)
 
