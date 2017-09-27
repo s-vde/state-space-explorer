@@ -9,7 +9,7 @@ namespace test {
 
 //--------------------------------------------------------------------------------------------------
 
-void vector_clock_copy_constructor_from_small_other_test()
+inline void vector_clock_copy_constructor_from_small_other_test()
 {
    auto other = VectorClock{3};
    other[0] = 1;
@@ -24,7 +24,7 @@ void vector_clock_copy_constructor_from_small_other_test()
 
 //--------------------------------------------------------------------------------------------------
 
-void vector_clock_copy_constructor_from_large_other_test()
+inline void vector_clock_copy_constructor_from_large_other_test()
 {
    auto other = VectorClock{3};
    other[0] = 1;
@@ -39,7 +39,7 @@ void vector_clock_copy_constructor_from_large_other_test()
 
 //--------------------------------------------------------------------------------------------------
 
-void vector_clock_copy_constructor_from_matching_other_test()
+inline void vector_clock_copy_constructor_from_matching_other_test()
 {
    auto other = VectorClock{3};
    other[0] = 1;
@@ -53,13 +53,4 @@ void vector_clock_copy_constructor_from_matching_other_test()
 }
 
 } // end namespace test
-} // end namespace program_model
-
-
-int main()
-{
-   exploration::test::vector_clock_copy_constructor_from_small_other_test();
-   exploration::test::vector_clock_copy_constructor_from_large_other_test();
-   exploration::test::vector_clock_copy_constructor_from_matching_other_test();
-   return 0;
-}
+} // end namespace exploration
