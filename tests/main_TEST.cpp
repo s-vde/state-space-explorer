@@ -11,7 +11,8 @@ int main()
    vector_clock_copy_constructor_from_matching_other_test();
 
    boost::filesystem::path test_programs_dir = BOOST_PP_STRINGIZE(TEST_PROGRAMS_DIR);
-   dpor_number_of_executions_test("shared_memory_access_non_concurrent.cpp", 1);
-
+   dpor_number_of_executions_test("deadlock_join_wait.cpp", 1);
+   // dpor_number_of_executions_test("shared_memory_access_non_concurrent.cpp", 1);
+   
    return 0;
 }
