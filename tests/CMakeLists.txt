@@ -28,7 +28,6 @@ set(SUFFICIENT_SETS_SOURCES
 )
 
 set(SCHEDULER_SOURCES
-  ${RECORD_REPLAY}/src/scheduler/program.cpp
   ${RECORD_REPLAY}/src/scheduler/schedule.cpp 
   ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp 
   ${RECORD_REPLAY}/src/scheduler/replay.cpp

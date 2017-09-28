@@ -6,7 +6,6 @@
 #include "error.hpp"
 #include "execution.hpp"
 #include "execution_io.hpp"
-#include "program.hpp"
 #include "replay.hpp"
 #include "schedule.hpp"
 #include "state.hpp"
