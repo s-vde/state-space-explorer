@@ -34,6 +34,38 @@ boost::filesystem::path output_dir(const scheduler::program_t& program, const mo
    return boost::filesystem::current_path() / "output" / filename.string() / mode.path();
 }
 
+
+program_model::Execution filter_operations_on_shared_variables(const program_model::Execution& execution)
+{
+    program_model::Execution filtered_execution;
+    std::unordered_map<program_model::Object::ptr_t, program_model::Tids> object_access_counter;
+    std::for_each(execution.begin(), execution.end(), [&object_access_counter](const auto& transition)
+    {
+        const auto& instruction = transition.instr();
+        const auto operand = boost::apply_visitor(program_model::get_operand(), instruction);
+        if (const auto* memory_location = boost::get<program_model::Object>(&operand))
+        {
+            const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
+            object_access_counter[memory_location->address()].insert(tid);
+        }
+    });
+    
+    std::for_each(execution.begin(), execution.end(), [&object_access_counter](const auto& transition)
+    {
+        const auto& instruction = transition.instr();
+        const auto operand = boost::apply_visitor(program_model::get_operand(), instruction);
+        if (const auto* memory_location = boost::get<program_model::Object>(&operand))
+        {
+            if (object_access_counter[memory_location->address()].size() > 1)
+            {
+                
+            }
+        }
+    });
+    
+    return filtered_execution;
+}
+
 } // end namespace
 
 //--------------------------------------------------------------------------------------------------
