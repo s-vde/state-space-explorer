@@ -28,8 +28,8 @@ set(SUFFICIENT_SETS_SOURCES
 )
 
 set(SCHEDULER_SOURCES
-  ${RECORD_REPLAY}/src/scheduler/schedule.cpp 
-  ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp 
+  ${RECORD_REPLAY}/src/scheduler/schedule.cpp
+  ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp
   ${RECORD_REPLAY}/src/scheduler/replay.cpp
 )
 
@@ -72,4 +72,4 @@ target_compile_definitions(StateSpaceExplorerTest PRIVATE "TEST_PROGRAMS_DIR=${C
 ####################
 # LINKING
 
-target_link_libraries(StateSpaceExplorerTest RecordReplayProgramModel)
+target_link_libraries(StateSpaceExplorerTest RecordReplayProgramModel ${Boost_LIBRARIES})

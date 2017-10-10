@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.5.2)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_EXE_LINKER_FLAGS "-lboost_system -lboost_filesystem -lboost_program_options")
 
 ####################
 # DEPENDENCIES
+
+find_package(Boost COMPONENTS program_options filesystem system)
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS})
+endif()
 
 set(LLVM_DIR    ${LLVM_BUILD_DIR}/lib/cmake/llvm)
 
@@ -36,7 +40,7 @@ include_directories(src/sufficient_sets)
 ####################
 # SOURCES
 
-set(BOUND_FUNCTIONS_SOURCES 
+set(BOUND_FUNCTIONS_SOURCES
   src/bound_functions/local_bound_function.hpp
   src/bound_functions/preemptions.cpp
 )
@@ -48,8 +52,8 @@ set(SUFFICIENT_SETS_SOURCES
 )
 
 set(SCHEDULER_SOURCES
-  ${RECORD_REPLAY}/src/scheduler/schedule.cpp 
-  ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp 
+  ${RECORD_REPLAY}/src/scheduler/schedule.cpp
+  ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp
   ${RECORD_REPLAY}/src/scheduler/replay.cpp
 )
 
@@ -72,7 +76,7 @@ add_executable(depth_first_search
   ${UTILS_SOURCES}
 )
 
-target_link_libraries(depth_first_search RecordReplayProgramModel)
+target_link_libraries(depth_first_search RecordReplayProgramModel ${Boost_LIBRARIES})
 
 add_executable(dpor
   src/dependence.cpp
@@ -87,7 +91,7 @@ add_executable(dpor
   ${UTILS_SOURCES}
 )
 
-target_link_libraries(dpor RecordReplayProgramModel)
+target_link_libraries(dpor RecordReplayProgramModel ${Boost_LIBRARIES})
 
 add_executable(bounded_search
   src/bound.cpp
@@ -99,4 +103,4 @@ add_executable(bounded_search
   ${UTILS_SOURCES}
 )
 
-target_link_libraries(bounded_search RecordReplayProgramModel)
+target_link_libraries(bounded_search RecordReplayProgramModel ${Boost_LIBRARIES})
