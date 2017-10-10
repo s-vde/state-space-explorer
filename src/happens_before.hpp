@@ -256,7 +256,7 @@ void HappensBefore<Dependence>::update(const index_t i)
 {
    /// @pre defined_on_prefix(i-1) && frontier_valid_for(i-1)
    assert(defined_on_prefix(i - 1) && frontier_valid_for(i - 1));
-   DEBUGFNL(outputname(), "update", "[" << i << "]", "");
+   DEBUGF(outputname(), "update", "[" << i << "]", "\n");
    mHB.push_back(detail::create_clock<Dependence>(mE, mHB, i, mE[i].instr()));
    update_frontier(mE[i], mHB.back());
    /// @post defined_on_prefix(i) && frontier_valid_for(i)
@@ -313,7 +313,7 @@ VectorClock::indices_t HappensBefore<Dependence>::max_dependent_per_thread(
 {
    /// @pre frontier_valid_for(i)
    assert(frontier_valid_for(i));
-   DEBUGFNL("\t" << outputname(), "max_dependent_per_thread", "[" << i << "], " << instr, "");
+   DEBUGF("\t" << outputname(), "max_dependent_per_thread", "[" << i << "], " << instr, "\n");
    VectorClock::indices_t MaxDep{};
    VectorClock C = clock(i, instr);
    const auto tid = boost::apply_visitor(program_model::get_tid(), instr);

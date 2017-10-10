@@ -62,13 +62,13 @@ namespace exploration
             const unsigned int index,
             const HappensBefore<Dependence>& HB)
         {
-            DEBUGFNL(outputname(), "backtrack_points", to_short_string(E[index]), "");
+            DEBUGF(outputname(), "backtrack_points", to_short_string(E[index]), "\n");
             VectorClock::indices_t Covering = HB.covering(index, E[index].instr());
             BacktrackPoints Points{};
             for (const auto& covering : Covering) {
                 const auto tid_index = boost::apply_visitor(program_model::get_tid(), E[index].instr());
                 Points.push_back({ tid_index, covering });
-                DEBUGNL(tabs() << "\tPoints.add(<tid=" <<tid_index << ", index=" << covering << ">)");
+                DEBUG(tabs() << "\tPoints.add(<tid=" <<tid_index << ", index=" << covering << ">)\n");
             }
             return Points;
         }
@@ -88,7 +88,7 @@ namespace exploration
             const HappensBefore<Dependence>& HB,
             const backtrack_point& point)
         {
-            DEBUGFNL(outputname(), "add_backtrack_point", point, "");
+            DEBUGF(outputname(), "add_backtrack_point", point, "\n");
             VectorClock::values_t v = HB.incomparable_after(point.index, index);
             v.insert(index);
             Tids Front = HB.tids(HB.front(v));

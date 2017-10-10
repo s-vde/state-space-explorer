@@ -13,7 +13,6 @@ int main()
 
    std::thread spawn_thread([&shared_variable]() {
       shared_variable = 1;
-      pthread_exit(0);
    });
    spawn_thread.join();
    shared_variable = 2;

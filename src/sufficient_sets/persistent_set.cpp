@@ -33,7 +33,7 @@ namespace exploration
      */
 	bool Persistent::condition(const execution&, SufficientSet&, const Thread::tid_t&)
     {
-        DEBUGFNL(outputname(), "condition", "", " = true");
+        DEBUGF(outputname(), "condition", "", " = true\n");
         return true;
     }
     

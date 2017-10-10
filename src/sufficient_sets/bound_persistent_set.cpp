@@ -117,9 +117,9 @@ namespace exploration
 		/// @pre mState.size() == t.index()+1 (i.e. did not yet pop_back())
 		assert(mState.size() == t.index()+1);
 		if (mState[t.index()].bound_exceeded()) {
-			DEBUGFNL(
+			DEBUGF(
 				outputname(), "update_after_exploration", to_string_pre_state(t),
-				to_string_pre_state(t) << ".set_bound_exceeded()"
+				to_string_pre_state(t) << ".set_bound_exceeded()" << "\n"
 			);
 			mState[t.index()-1].set_bound_exceeded();
 		}

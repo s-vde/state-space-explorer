@@ -208,7 +208,7 @@ private:
       {
          move_records(mStatistics.nr_explorations(), m_output_dir);
       }
-      DEBUGFNL(outputname(), "UPDATE_STATE", "from=" << from, "");
+      DEBUGF(outputname(), "UPDATE_STATE", "from=" << from, "\n");
       for (auto& t : mExecution)
       {
          if (t.index() < from)

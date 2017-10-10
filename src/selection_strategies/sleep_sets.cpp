@@ -42,7 +42,7 @@ namespace scheduler
 		std::ifstream ifs("schedules/sleepset.txt");
 		ifs >> mSleep;
 		ifs.close();
-		DEBUGFNL("SleepSets", "initialize", "", "mSleep = " << mSleep);
+		DEBUGF("SleepSets", "initialize", "", "mSleep = " << mSleep << "\n");
 	}
 	
 	void SleepSets::update_sleep(const TaskPool& pool, const instruction_t& current)

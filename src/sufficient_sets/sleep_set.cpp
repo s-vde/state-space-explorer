@@ -25,7 +25,7 @@ namespace exploration
 				return pool.next(*asleep)->second.instr; },
 			D
 		);
-		DEBUGNL("} = " << mSleep);
+		DEBUG("} = " << mSleep << "\n");
 	}
 	
     void SleepSet::add(const Thread::tid_t& tid)

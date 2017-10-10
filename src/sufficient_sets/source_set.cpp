@@ -40,7 +40,7 @@ namespace exploration
      */
     bool Source::condition(const execution&, SufficientSet&, const Thread::tid_t&)
     {
-        DEBUGFNL(outputname(), "condition", "", " = true");
+        DEBUGF(outputname(), "condition", "", " = true\n");
         return true;
     }
     

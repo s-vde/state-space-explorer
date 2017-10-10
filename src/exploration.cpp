@@ -99,7 +99,7 @@ ExplorationStatistics ExplorationBase::statistics() const
 
 void ExplorationBase::run_program()
 {
-   DEBUGFNL(outputname(), "run_program", "", "under schedule " << mSchedule);
+   DEBUGF(outputname(), "run_program", "", "under schedule " << mSchedule << "\n");
    scheduler::run_under_schedule(mProgram, mSchedule);
    mExecution = program_model::Execution();
    if (!utils::io::read_from_file("record.txt", mExecution))

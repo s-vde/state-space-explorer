@@ -168,7 +168,7 @@ namespace exploration
 			const unsigned int index,
 			const HappensBefore<Dependence>& HB) const
 		{
-			DEBUGFNL(outputname(), "backtrack_points", to_short_string(E[index]), "");
+			DEBUGF(outputname(), "backtrack_points", to_short_string(E[index]), "\n");
 			BacktrackPoints Points{};
 			const State& s = E[index].pre();
 			std::for_each(
@@ -185,7 +185,7 @@ namespace exploration
 					/// reduction here yields equivalent behaviour.
 					for (const auto& index : points) {
 						Points.push_back({ next.first, index });
-						DEBUGNL(tabs << "\tPoints.add(" << Points.back() << ")");
+						DEBUG(tabs << "\tPoints.add(" << Points.back() << ")\n");
 					}
 				}
 			);
@@ -303,7 +303,7 @@ namespace exploration
         {
             const auto tid = boost::apply_visitor(program_model::get_tid(), t.instr());
             mState.emplace_back(BoundFunction::value(E, mState, t.index()-1, tid));
-            DEBUGFNL(outputname(), "update_state", t.instr(), to_string_post_state(t) << ".boundvalue = " << mState.back().boundvalue());
+            DEBUGF(outputname(), "update_state", t.instr(), to_string_post_state(t) << ".boundvalue = " << mState.back().boundvalue() << "\n");
         }
         
         /**
@@ -344,7 +344,7 @@ namespace exploration
             const backtrack_point& point,
             bool conservative=false)
         {
-            DEBUGFNL(outputname(), "add_backtrack_point" << (conservative ? "_conservative" : ""), point, "");
+            DEBUGF(outputname(), "add_backtrack_point" << (conservative ? "_conservative" : ""), point, "\n");
             Thread::tid_t alt = point.tid;
             if (mOpt.ALTERNATIVE_THREAD()) {
                 auto Alt = alternatives(E, index, S[point.index-1], HB, point);
@@ -389,11 +389,11 @@ namespace exploration
 		bool condition(const execution& E, SufficientSet& s, const Thread::tid_t& tid)
         {
             if (BoundFunction::value(E, mState, E.size(), tid) <= mBound) {
-                DEBUGFNL(outputname(), "condition", tid, " = true");
+                DEBUGF(outputname(), "condition", tid, " = true\n");
                 return true;
             } else {
                 mState.back().set_bound_exceeded();
-                DEBUGFNL(outputname(), "condition", tid, " = false ");
+                DEBUGF(outputname(), "condition", tid, " = false\n");
                 return false;
             }
         }

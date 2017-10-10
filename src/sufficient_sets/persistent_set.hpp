@@ -70,7 +70,7 @@ namespace exploration
             const unsigned int index,
             const HappensBefore<Dependence>& HB)
         {
-            DEBUGFNL(outputname(), "backtrack_points", to_short_string(E[index]), "");
+            DEBUGF(outputname(), "backtrack_points", to_short_string(E[index]), "\n");
             BacktrackPoints Points{};
             std::for_each(
                 E[index].pre().next_cbegin(), E[index].pre().next_cend(),
@@ -78,7 +78,7 @@ namespace exploration
                     auto maxdep = HB.max_dependent(index, next.second.instr, true, true);
                     if (maxdep > 0) {
                         Points.push_back({ next.first, maxdep });
-                        DEBUGNL(tabs() << "\tPoints.add(" << Points.back() << ")");
+                        DEBUG(tabs() << "\tPoints.add(" << Points.back() << ")\n");
                     }
                 }
             );
@@ -98,7 +98,7 @@ namespace exploration
             const HappensBefore<Dependence>& HB,
             const backtrack_point& point)
         {
-            DEBUGFNL(outputname(), "add_backtrack_point", point, "");
+            DEBUGF(outputname(), "add_backtrack_point", point, "\n");
 			const State& s = E[point.index].pre();
 			SufficientSet& s_ = S[point.index-1];
             // Prioritize point.tid
@@ -148,10 +148,10 @@ namespace exploration
             );
 			DEBUGF(outputname(), "alternatives", point, " = (" << Alt << " U {" << point.tid << "}) cap" << enabled);
 			if (use_sleepsets) {
-				DEBUGNL(" \\ " << s.sleepset() << " = " << s.sleepset().awake(AltEnabled));
+				DEBUG(" \\ " << s.sleepset() << " = " << s.sleepset().awake(AltEnabled) << "\n");
 				return s.sleepset().awake(AltEnabled);
 			} else {
-				DEBUGNL(" = " << AltEnabled);
+				DEBUG(" = " << AltEnabled << "\n");
 				return AltEnabled;
 			}
         }

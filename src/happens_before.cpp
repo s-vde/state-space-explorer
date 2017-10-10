@@ -59,7 +59,7 @@ VectorClock::values_t HappensBeforeBase::incomparable_after(const index_t i1,
          Incomparable.insert(j);
       }
    }
-   DEBUGFNL("\t" << outputname(), "incomparable_after", "[" << i1 << "]", " = " << Incomparable);
+   DEBUGF("\t" << outputname(), "incomparable_after", "[" << i1 << "]", " = " << Incomparable << "\n");
    return Incomparable;
 }
 
@@ -84,18 +84,18 @@ VectorClock::values_t HappensBeforeBase::front(const VectorClock::indices_t& sub
                });
             if (seen_before != C.cend())
             {
-               DEBUGNL(tabs() << "\t\t" << i << " notin Front");
+               DEBUG(tabs() << "\t\t" << i << " notin Front\n");
             }
             else
             {
-               DEBUGNL(tabs() << "\t\t" << i << " in Front");
+               DEBUG(tabs() << "\t\t" << i << " in Front\n");
                Front.insert(i);
             }
             first_seen[tid] = i;
          }
          else
          {
-            DEBUGNL(tabs() << "\t\t" << i << " notin Front : not first of " << tid);
+            DEBUG(tabs() << "\t\t" << i << " notin Front : not first of " << tid << "\n");
             /// @invariant last_seen[tid] == C[tid]
             /// (i.e. subsequence of Transitions by tid in subseq
             /// does not skip Transitions by tid).
@@ -104,7 +104,7 @@ VectorClock::values_t HappensBeforeBase::front(const VectorClock::indices_t& sub
          last_seen[tid] = i;
       }
    }
-   DEBUGFNL("\t" << outputname(), "front", subseq, " = " << Front);
+   DEBUGF("\t" << outputname(), "front", subseq, " = " << Front << "\n");
    return Front;
 }
 
@@ -188,7 +188,7 @@ VectorClock::indices_t HappensBeforeBase::covering(const index_t i, const instru
       const auto tid_j = boost::apply_visitor(program_model::get_tid(), mE[j].instr());
       C[tid_j] = 0;
    }
-   DEBUGFNL("\t" << outputname(), "covering", "[" << i << "], " << instr, " = " << Covering);
+   DEBUGF("\t" << outputname(), "covering", "[" << i << "], " << instr, " = " << Covering << "\n");
    return Covering;
 }
 
