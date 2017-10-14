@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 14)
 ####################
 # DEPENDENCIES
 
+include_directories(${GOOGLE_TEST}/googletest/include)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
 set(CPP_UTILS   ${CMAKE_CURRENT_SOURCE_DIR}/../libs/cpp-utils)
@@ -53,9 +55,7 @@ add_executable(StateSpaceExplorerTest
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/sufficient_sets/persistent_set.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/sufficient_sets/sleep_set.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/sufficient_sets/sufficient_set.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/dpor_TEST.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/main_TEST.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/vector_clock_TEST.cpp
   ${SCHEDULER_SOURCES}
   ${UTILS_SOURCES}
 )
@@ -73,4 +73,4 @@ target_compile_definitions(StateSpaceExplorerTest PRIVATE "TEST_PROGRAMS_DIR=${C
 ####################
 # LINKING
 
-target_link_libraries(StateSpaceExplorerTest RecordReplayProgramModel ${Boost_LIBRARIES})
+target_link_libraries(StateSpaceExplorerTest RecordReplayProgramModel gtest ${Boost_LIBRARIES})

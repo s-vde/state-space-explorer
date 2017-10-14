@@ -10,9 +10,14 @@ if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
+set(GOOGLE_TEST   ${CMAKE_CURRENT_SOURCE_DIR}/libs/googletest)
+add_subdirectory(${GOOGLE_TEST})
+message(STATUS "Using GOOGLE_TEST ${GOOGLE_TEST}")
+
 set(LLVM_DIR    ${LLVM_BUILD_DIR}/lib/cmake/llvm)
 
 set(CPP_UTILS   ${CMAKE_CURRENT_SOURCE_DIR}/libs/cpp-utils)
+add_subdirectory(${CPP_UTILS}/tests)
 include_directories(${CPP_UTILS}/src)
 
 set(RECORD_REPLAY   ${CMAKE_CURRENT_SOURCE_DIR}/libs/record-replay)

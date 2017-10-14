@@ -6,38 +6,63 @@
 
 #include <replay.hpp>
 
+#include <gtest/gtest.h>
+
 #include <boost/filesystem/path.hpp>
 #include <boost/preprocessor/stringize.hpp>
-
-#include <assert.h>
-
-#include <limits>
 
 
 namespace exploration {
 namespace test {
+namespace detail {
+
+static const auto test_programs_dir =
+   boost::filesystem::path(BOOST_PP_STRINGIZE(TEST_PROGRAMS_DIR));
+static const auto tests_build_dir = boost::filesystem::path{BOOST_PP_STRINGIZE(TESTS_BUILD_DIR)};
+static const auto instrumented_dir = tests_build_dir / "test_data" / "test_programs_instrumented";
+
+} // end namespace detail
 
 //--------------------------------------------------------------------------------------------------
 
-inline void dpor_number_of_executions_test(const boost::filesystem::path& test_program,
-                                           const std::string& optimization_level,
-                                           const std::string& compiler_options,
-                                           const unsigned int expected_nr_executions)
+struct DporNrExecutionsTestData
 {
-   const auto test_programs_dir = boost::filesystem::path(BOOST_PP_STRINGIZE(TEST_PROGRAMS_DIR));
-   const auto tests_build_dir = boost::filesystem::path{BOOST_PP_STRINGIZE(TESTS_BUILD_DIR)};
-   const auto output_dir = tests_build_dir / "test_data" / "test_programs_instrumented";
-   scheduler::instrument((test_programs_dir / test_program).string(), output_dir.string(),
-                         optimization_level, compiler_options);
+   boost::filesystem::path test_program;
+   std::string optimization_level;
+   std::string compiler_options;
+   unsigned int expected_nr_executions;
 
-   const auto instrumented_program = (output_dir / test_program.stem()).replace_extension("");
+}; // end struct NrExplorationsTestData
+
+struct DporNrExecutionsTest : public ::testing::TestWithParam<DporNrExecutionsTestData>
+{
+}; // end struct InstrumentedProgramRunTest
+
+TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
+{
+   scheduler::instrument((detail::test_programs_dir / GetParam().test_program).string(),
+                         detail::instrumented_dir.string(), GetParam().optimization_level,
+                         GetParam().compiler_options);
+
+   const auto instrumented_program = detail::instrumented_dir / GetParam().test_program.stem();
 
    using dpor_t = Exploration<depth_first_search<dpor<Persistent>>>;
-   dpor_t dpor{instrumented_program.string(), std::numeric_limits<unsigned int>::max()};
+   dpor_t dpor{instrumented_program.string(), GetParam().expected_nr_executions + 1};
    dpor.run();
 
-   assert(dpor.statistics().nr_explorations() == expected_nr_executions);
+   ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions);
 }
+
+INSTANTIATE_TEST_CASE_P(
+   DporNrExecutionsTests, DporNrExecutionsTest,
+   ::testing::Values(DporNrExecutionsTestData{"shared_memory_access_non_concurrent.cpp", "0",
+                                              "-std=c++14", 1},
+                     // @cite Flanagan:2005:DPR:1040305.1040315 page 8
+                     DporNrExecutionsTestData{
+                        "../../libs/record-replay/tests/test_programs/real_world/filesystem.c", "0",
+                        "-DNR_THREADS=13", 1},
+                     // @cite Abdulla:2014:ODP:2535838.2535845
+                     DporNrExecutionsTestData{"benchmarks/readers_nonpreemptive.c", "0", "", 5}));
 
 //--------------------------------------------------------------------------------------------------
 
