@@ -28,6 +28,7 @@ set(SUFFICIENT_SETS_SOURCES
 )
 
 set(SCHEDULER_SOURCES
+  ${CPP_UTILS}/src/fork.cpp
   ${RECORD_REPLAY}/src/scheduler/schedule.cpp
   ${RECORD_REPLAY}/src/scheduler/scheduler_settings.cpp
   ${RECORD_REPLAY}/src/scheduler/replay.cpp
