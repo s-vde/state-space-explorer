@@ -43,9 +43,7 @@ namespace exploration
 		}
         
         static std::string name();
-        
-        static std::string path();
-        
+                
         static void update_state(const execution& E, const transition& t);
         
         /**

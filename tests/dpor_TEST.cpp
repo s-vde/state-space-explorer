@@ -39,7 +39,7 @@ struct DporNrExecutionsTest : public ::testing::TestWithParam<DporNrExecutionsTe
    boost::filesystem::path test_output_dir() const
    {
       return detail::test_data_dir / GetParam().test_program.filename() /
-             boost::filesystem::path("0" + GetParam().optimization_level);
+             boost::filesystem::path("0" + GetParam().optimization_level) / "dpor";
    }
 }; // end struct InstrumentedProgramRunTest
 
@@ -54,7 +54,7 @@ TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
 
    using dpor_t = Exploration<depth_first_search<dpor<Persistent>>>;
    dpor_t dpor{instrumented_program, GetParam().expected_nr_executions + 1};
-   dpor.run();
+   dpor.run({}, test_output_dir() / "output");
 
    ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions);
 }

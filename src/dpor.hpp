@@ -113,9 +113,7 @@ public:
 	/// @brief Wrapper for mSufficientSet::check_valid.
 
 	bool check_valid(const bool contains_locks) const;
-        
-   std::string path() const;
-	
+   	
 	//-----------------------------------------------------------------------------------------------
 		
    /// @details Calls dpor_base::update_state and uses the functionality of  sufficient_set_t to 
@@ -202,17 +200,6 @@ template <typename sufficient_set_t>
 inline bool dpor<sufficient_set_t>::check_valid(const bool contains_locks) const
 {
 	 return mSufficientSet.check_valid(contains_locks);
-}
-
-//--------------------------------------------------------------------------------------------------
-
-template <typename sufficient_set_t>
-std::string dpor<sufficient_set_t>::path() const
-{
-	std::string path = name;
-	path += "/";
-	path += mSufficientSet.path();
-	return path;
 }
 
 //--------------------------------------------------------------------------------------------------

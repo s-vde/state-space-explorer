@@ -68,9 +68,7 @@ public:
    }
 		
    static std::string name;
-        
-   std::string path() const;
-        
+           
    /// @brief Wrapper of mReduction.scheduler_settings.
    scheduler::SchedulerSettings scheduler_settings();
         
@@ -224,17 +222,6 @@ template <typename reduction_t>
 std::string depth_first_search<reduction_t>::outputname()
 {
     return text_color(name, utils::io::Color::BLUE);
-}
-
-//--------------------------------------------------------------------------------------------------
-
-template <typename reduction_t>
-std::string depth_first_search<reduction_t>::path() const
-{
-    std::string path = name;
-    path += "/";
-    path += mReduction.path();
-    return path;
 }
 
 //--------------------------------------------------------------------------------------------------

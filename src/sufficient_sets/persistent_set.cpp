@@ -8,11 +8,6 @@ namespace exploration
         return "Persistent";
     }
     
-    std::string Persistent::path()
-    {
-        return name();
-    }
-    
     /**
      @brief Does nothing.
      */

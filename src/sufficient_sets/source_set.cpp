@@ -15,11 +15,6 @@ namespace exploration
         return "Source";
     }
     
-    std::string Source::path()
-    {
-        return name();
-    }
-    
     /**
      @brief Does nothing.
      */

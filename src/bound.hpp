@@ -65,7 +65,6 @@ public:
    //-----------------------------------------------------------------------------------------------
         
    static std::string name;
-   std::string path() const;
         
    /// @brief Nonpreemptive.
    scheduler::SchedulerSettings scheduler_settings();
@@ -161,19 +160,6 @@ private:
 
 template <typename bound_function_t>
 std::string bound<bound_function_t>::name = "bound";
-
-//--------------------------------------------------------------------------------------------------  
-
-template <typename bound_function_t>
-std::string bound<bound_function_t>::path() const
-{
-   std::string path = name;
-   path += "/";
-   path += bound_function_t::name();
-   path += "/";
-   path += std::to_string(mBoundValue);
-   return path;
-}
  
 //--------------------------------------------------------------------------------------------------
 

@@ -23,6 +23,8 @@ public:
          "the system under test, instrumented with the Record-Replay compiler pass")(
          "max", boost::program_options::value<unsigned int>(),
          "the maximum number of executions explored")(
+         "o", boost::program_options::value<std::string>(),
+         "the directory where output files are dumped")(
          "sufficient-set",
          boost::program_options::value<std::string>()->default_value("persistent"),
          "the sufficient set implementation to be used with DPOR based exploration (values: "
@@ -69,7 +71,7 @@ std::pair<scheduler::program_t, unsigned int> get_required_options(const options
    catch (const boost::bad_any_cast&)
    {
       throw std::invalid_argument(
-         "Please run State-Space Exploration with required options --i --n and --max");
+         "Please run State-Space Exploration with required options --i and --max");
    }
 }
 

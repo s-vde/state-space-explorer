@@ -27,12 +27,22 @@ int main(int argc, char* argv[])
 
       const std::string bound_function = options.map()["bound-function"].as<std::string>();
       const unsigned int bound = options.map()["bound"].as<unsigned int>();
+      
+      boost::filesystem::path output_dir;
+      try
+      {
+         output_dir = options.map()["o"].as<std::string>();
+      } 
+      catch(const std::exception&)
+      {
+         output_dir = "./statespace_explorer_output" / required.first.filename() / "bounded";
+      }
 
       if (bound_function == "preemptions")
       {
          exploration::bounded_search<bound_functions::Preemptions> bs(required.first,
                                                                       required.second, bound);
-         bs.run();
+         bs.run({}, output_dir.string() + "-preemptions-" + std::to_string(bound));
          return 0;
       }
       else

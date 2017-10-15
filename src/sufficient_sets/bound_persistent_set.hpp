@@ -87,9 +87,7 @@ namespace exploration
 		bool ALTERNATIVE_THREAD() const;
 		bool BOUND_OPT() const;
 		sleep_t SLEEPSETS() const;
-		
-		std::string path() const;
-		
+				
 	private:
 		
 		/**
@@ -286,18 +284,6 @@ namespace exploration
 		, mBound(bound) { }
 		
 		//
-        
-		std::string path() const
-        {
-            std::string path = name;
-            path += "/";
-            path += BoundFunction::name();
-            path += "/";
-            path += std::to_string(mBound);
-            path += "/";
-            path += mOpt.path();
-            return path;
-        }
         
         void update_state(const execution& E, const transition& t)
         {

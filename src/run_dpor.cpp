@@ -32,10 +32,20 @@ int main(int argc, char* argv[])
       const auto required = state_space_explorer::get_required_options(options);
 
       const std::string& sufficient_set = options.map()["sufficient-set"].as<std::string>();
+      
+      boost::filesystem::path output_dir;
+      try
+      {
+         output_dir = options.map()["o"].as<std::string>();
+      } 
+      catch(const std::exception&)
+      {
+         output_dir = "./statespace_explorer_output" / required.first.filename() / "dpor";
+      }
 
       if (sufficient_set == "persistent")
       {
-         dpor_t<Persistent>(required.first, required.second).run();
+         dpor_t<Persistent>(required.first, required.second).run({}, output_dir);
          return 0;
       }
       else
