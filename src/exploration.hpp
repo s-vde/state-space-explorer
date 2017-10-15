@@ -45,7 +45,7 @@ void move_records(unsigned int nr, const boost::filesystem::path& source_dir);
 
 struct Settings
 {
-   bool keep_records = false;
+   bool keep_records = true;
    bool keep_logs = false;
    boost::optional<scheduler::timeout_t> timeout = boost::none;
 

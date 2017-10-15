@@ -42,9 +42,16 @@ def execution_tree(color='black', nodesep='3'):
 # node
 #---------------------------------------------------------------------------------------------------
 
-def node_of_schedule(schedule, prefix="s."):
-    return "%s%s" % (prefix, 
-                      ".".join(map(lambda thread_id : str(thread_id), schedule)))
+def node_of_schedule(schedule, prefix="s"):
+    if len(schedule) > 0:
+        return "%s.%s" % (prefix, 
+                        ".".join(map(lambda thread_id : str(thread_id), schedule)))
+    return prefix
+    
+#---------------------------------------------------------------------------------------------------
+
+def dummy_node_of_schedule(schedule, prefix="s"):
+    return "_instr_%s" % node_of_schedule(schedule, prefix)
     
 #---------------------------------------------------------------------------------------------------
 
@@ -180,34 +187,6 @@ def parse_schedules(file_name):
     file = open(file_name,'r')
     lines = file.readlines()
     return list(map(lambda line : parse_schedule(line), lines))
-    
-
-#---------------------------------------------------------------------------------------------------    
-# execution
-#---------------------------------------------------------------------------------------------------    
-
-def add_execution(tree, execution):
-    node_id = "s"
-    add_node(tree, node_id)
-    for (thread_id, instruction) in execution:
-        child_node_id = "%s.%d" % (node_id, thread_id)
-        add_node(tree, child_node_id)
-        add_edge(tree, node_id, child_node_id, instruction)
-        node_id = child_node_id
-        
-#---------------------------------------------------------------------------------------------------
-
-def add_execution_from_program_and_schedule(tree, program, schedule):
-    node_id = "s"
-    add_node(tree, node_id)
-    thread_indices = list(map(lambda thread_id : 0, program))
-    for thread_id in schedule:
-        thread_index = thread_indices[thread_id]
-        child_node_id = "%s.%d" % (node_id, thread_id)
-        add_node(tree, child_node_id)
-        add_edge(tree, node_id, child_node_id, program[thread_id][thread_index])
-        node_id = child_node_id
-        thread_indices[thread_id] = thread_index + 1
 
 
 #---------------------------------------------------------------------------------------------------
@@ -226,9 +205,43 @@ def dump(tree, output_dir):
     print ("dumping eps representation to %s" % eps_file)
     os.system("dot %s -Teps -o %s" % (dot_file, eps_file))  
 
+
+#---------------------------------------------------------------------------------------------------
+# trace
+#---------------------------------------------------------------------------------------------------
+
+def add_trace(tree, schedule, trace):
+    for index in range(0, len(schedule)):
+        instruction = trace[index]
+        instruction_str = "  %s %s %s  " % (instruction[0], instruction[1], instruction[3])
+        node = tree.get_node(dummy_node_of_schedule(schedule[0: index+1]))
+        node.attr['xlabel'] = instruction_str
+
+#---------------------------------------------------------------------------------------------------
+
+def parse_instruction(line, operands):
+    instruction = line.split(" ")[1:]
+    # remove undesired characters
+    instruction = list(map(lambda entry : entry.replace("\"", "").replace("\n", ""), instruction))
+    address = instruction[2]
+    name = instruction[3]
+    if address not in operands:
+        operands[address] = []
+    if name not in operands[address]:
+        operands[address].append(name)
+    return instruction
     
 #---------------------------------------------------------------------------------------------------
 
+def parse_trace(file_name):
+    file = open(file_name,'r')
+    lines = file.readlines()
+    operands = dict()
+    execution = []
+    for line in lines[0:len(lines)-1]:
+        execution.append(parse_instruction(line, operands))
+    return (execution, operands)
+    
 def create_tree_from_schedules(file_name):
     tree = execution_tree()
     schedules = parse_schedules(file_name)
