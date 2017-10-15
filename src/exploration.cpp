@@ -6,14 +6,38 @@ namespace exploration {
 
 //--------------------------------------------------------------------------------------------------
 
-void move_records(unsigned int nr, boost::filesystem::path target)
+namespace detail {
+
+program_model::Execution replay(const scheduler::program_t& program,
+                                const scheduler::schedule_t& schedule,
+                                const boost::filesystem::path& records_dir)
 {
-   boost::filesystem::path source("record.txt");
-   target /= "record";
-   target += std::to_string(nr);
-   target += ".txt";
-   boost::filesystem::rename(source, target);
+   DEBUGF("StateSpaceExplorer", "replay", program, "under schedule " << schedule << "\n");
+   scheduler::run_under_schedule(program, schedule, boost::none, records_dir);
+
+   program_model::Execution execution;
+   if (!utils::io::read_from_file((records_dir / "record.txt").string(), execution))
+      throw std::runtime_error("Could not parse " + (records_dir / "record.txt").string());
+   return execution;
 }
+
+//--------------------------------------------------------------------------------------------------
+
+void move_records(unsigned int nr, const boost::filesystem::path& source_dir)
+{
+   // record.txt
+   {
+      const boost::filesystem::path target_file = "record_" + std::to_string(nr) + ".txt";
+      boost::filesystem::rename(source_dir / "record.txt", source_dir / target_file);
+   }
+   // record_short.txt
+   {
+      const boost::filesystem::path target_file = "record_short_" + std::to_string(nr) + ".txt";
+      boost::filesystem::rename(source_dir / "record_short.txt", source_dir / target_file);
+   }
+}
+
+} // end namespace detail
 
 //--------------------------------------------------------------------------------------------------
 
@@ -93,19 +117,6 @@ ExplorationBase::ExplorationBase(const scheduler::program_t& program,
 ExplorationStatistics ExplorationBase::statistics() const
 {
    return mStatistics;
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void ExplorationBase::run_program()
-{
-   DEBUGF(outputname(), "run_program", "", "under schedule " << mSchedule << "\n");
-   scheduler::run_under_schedule(mProgram, mSchedule);
-   mExecution = program_model::Execution();
-   if (!utils::io::read_from_file("record.txt", mExecution))
-   {
-      ERROR(full_name(), "run_program"); /* #todo Some error handling */
-   }
 }
 
 //--------------------------------------------------------------------------------------------------

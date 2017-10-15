@@ -25,7 +25,7 @@
 
 
 namespace exploration {
-namespace {
+namespace detail {
 
 template <typename mode_t>
 boost::filesystem::path output_dir(const scheduler::program_t& program, const mode_t& mode)
@@ -34,12 +34,18 @@ boost::filesystem::path output_dir(const scheduler::program_t& program, const mo
    return boost::filesystem::current_path() / "output" / filename.string() / mode.path();
 }
 
-} // end namespace
-
 //--------------------------------------------------------------------------------------------------
 
+/// @brief Runs the given program under the given schedule and returns a program_model::Execution
+/// object.
 
-void move_records(unsigned int nr, boost::filesystem::path target);
+program_model::Execution replay(const scheduler::program_t& program,
+                                const scheduler::schedule_t& schedule,
+                                const boost::filesystem::path& records_dir);
+
+void move_records(unsigned int nr, const boost::filesystem::path& source_dir);
+
+} // end namespace detail
 
 //--------------------------------------------------------------------------------------------------
 
@@ -57,7 +63,6 @@ struct settings
 class ExplorationStatistics
 {
 public:
-
    ExplorationStatistics();
 
    unsigned int nr_explorations() const;
@@ -70,7 +75,6 @@ public:
    void dump(const boost::filesystem::path& filename) const;
 
 private:
-
    using wall_clock_t = std::chrono::high_resolution_clock;
 
    unsigned int mNrExplorations;
@@ -92,7 +96,6 @@ public:
    ExplorationStatistics statistics() const;
 
 protected:
-
    using execution = program_model::Execution;
    using transition = typename execution::transition_t;
 
@@ -104,8 +107,6 @@ protected:
    bool mDone;
    std::ofstream mLogSchedules;
    settings m_settings;
-
-   void run_program();
 
    static const std::string name;
    static std::string outputname();
@@ -124,13 +125,12 @@ template <typename Mode>
 class Exploration : public ExplorationBase
 {
 public:
-
    template <typename... Args>
    explicit Exploration(const scheduler::program_t& program, const unsigned int max_nr_explorations,
                         Args... args)
    : ExplorationBase(program, max_nr_explorations)
    , mMode(mExecution, std::forward<Args>(args)...)
-   , m_output_dir(output_dir(program, mMode))
+   , m_output_dir(detail::output_dir(program, mMode))
    {
    }
 
@@ -147,14 +147,15 @@ public:
       boost::filesystem::create_directories(m_output_dir);
 
       // Open scheduler log file here once, opening in append mode is costly
-      mLogSchedules.open(m_output_dir.string() + "/schedules.txt");
+      mLogSchedules.open((m_output_dir / "schedules.txt").string());
       scheduler::write_settings(mMode.scheduler_settings());
       mSchedule = s;
       int from = 1;
       mStatistics.start_clock();
       while (!mDone && mStatistics.nr_explorations() < mMaxNrExplorations)
       {
-         run_program();
+         mMode.write_scheduler_files();
+         mExecution = detail::replay(mProgram, mSchedule, m_output_dir / "records");
          mMode.reset();
          if (mStatistics.nr_explorations() > 0 || mMode.check_valid(mExecution.contains_locks()))
          {
@@ -176,19 +177,8 @@ public:
    }
 
 private:
-
    Mode mMode;
    boost::filesystem::path m_output_dir;
-
-   /// @brief Runs the input program mProgram under the current schedule, updates mExecution and 
-   /// mSchedule according to the performed Execution, calls mMode to update its state, and updates 
-   /// log files.
-
-   void run_program()
-   {
-      mMode.write_scheduler_files();
-      ExplorationBase::run_program();
-   }
 
    void update_statistics()
    {
@@ -205,9 +195,8 @@ private:
       mSchedule = scheduler::schedule(mExecution);
       mLogSchedules << mSchedule << std::endl;
       if (m_settings.keep_records)
-      {
-         move_records(mStatistics.nr_explorations(), m_output_dir);
-      }
+         detail::move_records(mStatistics.nr_explorations(), m_output_dir / "records");
+
       DEBUGF(outputname(), "UPDATE_STATE", "from=" << from, "\n");
       for (auto& t : mExecution)
       {
@@ -266,7 +255,7 @@ private:
       full_name += ">";
       return full_name;
    }
-   
+
 }; // end class template Exploration<Mode>
 
 //--------------------------------------------------------------------------------------------------

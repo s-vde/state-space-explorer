@@ -19,7 +19,7 @@ namespace detail {
 static const auto test_programs_dir =
    boost::filesystem::path(BOOST_PP_STRINGIZE(TEST_PROGRAMS_DIR));
 static const auto tests_build_dir = boost::filesystem::path{BOOST_PP_STRINGIZE(TESTS_BUILD_DIR)};
-static const auto instrumented_dir = tests_build_dir / "test_data" / "test_programs_instrumented";
+static const auto test_data_dir = tests_build_dir / "test_data";
 
 } // end namespace detail
 
@@ -36,18 +36,24 @@ struct DporNrExecutionsTestData
 
 struct DporNrExecutionsTest : public ::testing::TestWithParam<DporNrExecutionsTestData>
 {
+   boost::filesystem::path test_output_dir() const
+   {
+      return detail::test_data_dir / GetParam().test_program.filename() /
+             boost::filesystem::path("0" + GetParam().optimization_level);
+   }
 }; // end struct InstrumentedProgramRunTest
 
 TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
 {
-   scheduler::instrument((detail::test_programs_dir / GetParam().test_program).string(),
-                         detail::instrumented_dir.string(), GetParam().optimization_level,
+   scheduler::instrument(detail::test_programs_dir / GetParam().test_program,
+                         test_output_dir() / "instrumented", GetParam().optimization_level,
                          GetParam().compiler_options);
 
-   const auto instrumented_program = detail::instrumented_dir / GetParam().test_program.stem();
+   const auto instrumented_program =
+      test_output_dir() / "instrumented" / GetParam().test_program.stem();
 
    using dpor_t = Exploration<depth_first_search<dpor<Persistent>>>;
-   dpor_t dpor{instrumented_program.string(), GetParam().expected_nr_executions + 1};
+   dpor_t dpor{instrumented_program, GetParam().expected_nr_executions + 1};
    dpor.run();
 
    ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions);
