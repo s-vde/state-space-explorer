@@ -109,12 +109,18 @@ def add_edge(tree, source_id, dest_id, label):
 
 #---------------------------------------------------------------------------------------------------
 
-def remove_edge_and_nodes(tree, source_id, dest_id):
-    dummy_id = "_instr_%s" % dest_id
-    tree.remove_edge(source_id, dummy_id)
-    tree.remove_edge(dummy_id, dest_id)
-    tree.remove_node(dummy_id)
-    tree.remove_node(dest_id)
+def remove_edge_and_nodes(tree, src_id, dst_id, next_id=None):
+    dummy_dst_id = "_instr_%s" % dst_id
+    if tree.has_edge(src_id, dummy_dst_id):
+        tree.remove_edge(src_id, dummy_dst_id)
+    if tree.has_edge(dummy_dst_id, dst_id):
+        tree.remove_edge(dummy_dst_id, dst_id)
+    tree.remove_node(dummy_dst_id)
+    tree.remove_node(dst_id)
+    
+    if not next_id == None:
+        dummy_next_id = "_instr_%s" % next_id
+        tree.add_edge(src_id, dummy_next_id, dir='none')
 
 
 #---------------------------------------------------------------------------------------------------
@@ -242,6 +248,32 @@ def parse_trace(file_name):
         execution.append(parse_instruction(line, operands))
     return (execution, operands)
     
+#---------------------------------------------------------------------------------------------------
+# filter tree
+#---------------------------------------------------------------------------------------------------
+
+def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
+    operands_lists = list(map(lambda operand_map :
+        { address for address, names in operand_map.items() \
+            if (len(list(filter(lambda name : name in selected_operands, names)))) > 0 }
+    , operands_maps))
+    
+    for schedule, trace, operands_list in zip(schedules, traces, operands_lists):
+        src_id = node_of_schedule(schedule[0: 0])
+        for index in range(0, len(schedule)):
+            dst_id = node_of_schedule(schedule[0: index+1])
+            if tree.has_node(src_id) and tree.has_node(dst_id):
+                if not trace[index][2] in operands_list:
+                    if index < len(schedule)-1:              
+                        remove_edge_and_nodes(tree, src_id, dst_id, node_of_schedule(schedule[0: index+2]))
+                    else:
+                        remove_edge_and_nodes(tree, src_id, dst_id)
+                else:
+                    src_id = dst_id
+
+
+#---------------------------------------------------------------------------------------------------
+
 def create_tree_from_schedules(file_name):
     tree = execution_tree()
     schedules = parse_schedules(file_name)
