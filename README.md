@@ -34,20 +34,6 @@ The build process will produce a number of executables, corresponding to differe
 
 ## Using State-Space Explorer
 
-### Instrumenting the System Under Test
-
-In order to instrument an input program, run
-
-```
-./instrument.sh
-     <state_space_explorer_build_dir>
-     <path_to_llvm>
-     <input_program_filepath>
-     <output_directory>
-     (compiler_options)
-```
-where all path variables can be either relative or absolute to the current directory.
-
 ### Running State-Space Explorer on the Instrumented Program
  
 The State-Space Explorer can be run as follows:
@@ -62,8 +48,8 @@ The State-Space Explorer can be run as follows:
 ./bounded_search
     --i <input_program> 
     --max <max_nr_executions>
-    --bound-function <bound_function> 
-    --bound <bound_value> 
+    --bound-function <bound_function>
+    --bound <bound_value>
 ```
 
 ```
@@ -80,8 +66,13 @@ where
 - `<input_program>` is the name of the input program, without extension, and without suffix corresponding to the number of threads
 - `<max_nr_executions>` is the maximal number of executions that the exploration is allowed to see.
 
-The exploration dumps records of the performed executions
-and a .dot representation of the explored part of the input program's execution tree.
+Other optional arguments to all exploration modes are:
+
+|              |                             | Default                              |
+| ------------ | --------------------------- | ------------------------------------ |
+| ```--c```    | ```<compiler_options>```    | ""                                   |
+| ```--o```    | ```<output_directory>```    | ```./statespace_explorer_output```   |
+| ```--opt```  | ```<optimization_level>```  | 0                                    |
 
 ---
 

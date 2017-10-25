@@ -27,16 +27,11 @@ struct DporNrExecutionsTest : public ::testing::TestWithParam<NrExecutionsTestDa
 
 TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
 {
-   scheduler::instrument(detail::test_programs_dir / GetParam().test_program,
-                         test_output_dir() / "instrumented", GetParam().optimization_level,
-                         GetParam().compiler_options);
-
-   const auto instrumented_program =
-      test_output_dir() / "instrumented" / GetParam().test_program.stem();
-
    using dpor_t = Exploration<depth_first_search<dpor<Persistent>>>;
-   dpor_t dpor{instrumented_program, GetParam().expected_nr_executions + 1};
-   dpor.run({}, test_output_dir() / "output");
+   dpor_t dpor{detail::test_programs_dir / GetParam().test_program,
+               GetParam().expected_nr_executions + 1};
+   dpor.run({}, GetParam().optimization_level, GetParam().compiler_options,
+            test_output_dir() / "output");
 
    ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions);
 }

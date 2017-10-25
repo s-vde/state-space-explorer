@@ -82,6 +82,9 @@ add_executable(depth_first_search
   ${UTILS_SOURCES}
 )
 
+target_compile_definitions(depth_first_search PRIVATE "LLVM_BIN=${LLVM_BIN}")
+target_compile_definitions(depth_first_search PRIVATE "RECORD_REPLAY_BUILD_DIR=${RECORD_REPLAY_BUILD_DIR}")
+
 target_link_libraries(depth_first_search RecordReplayProgramModel ${Boost_LIBRARIES})
 
 add_executable(dpor
@@ -97,6 +100,9 @@ add_executable(dpor
   ${UTILS_SOURCES}
 )
 
+target_compile_definitions(dpor PRIVATE "LLVM_BIN=${LLVM_BIN}")
+target_compile_definitions(dpor PRIVATE "RECORD_REPLAY_BUILD_DIR=${RECORD_REPLAY_BUILD_DIR}")
+
 target_link_libraries(dpor RecordReplayProgramModel ${Boost_LIBRARIES})
 
 add_executable(bounded_search
@@ -108,5 +114,8 @@ add_executable(bounded_search
   ${SCHEDULER_SOURCES}
   ${UTILS_SOURCES}
 )
+
+target_compile_definitions(bounded_search PRIVATE "LLVM_BIN=${LLVM_BIN}")
+target_compile_definitions(bounded_search PRIVATE "RECORD_REPLAY_BUILD_DIR=${RECORD_REPLAY_BUILD_DIR}")
 
 target_link_libraries(bounded_search RecordReplayProgramModel ${Boost_LIBRARIES})

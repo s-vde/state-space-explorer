@@ -22,22 +22,25 @@ int main(int argc, char* argv[])
       }
 
       const auto required = state_space_explorer::get_required_options(options);
-      
+
+      const std::string optimization_level = options.map()["opt"].as<std::string>();
+      const std::string compiler_options = options.map()["c"].as<std::string>();
+
       boost::filesystem::path output_dir;
       try
       {
          output_dir = options.map()["o"].as<std::string>();
-      } 
-      catch(const std::exception&)
+      }
+      catch (const std::exception&)
       {
          output_dir = "./statespace_explorer_output" / required.first.filename() / "dfs";
       }
-      
+
       using namespace exploration;
       using dfs_t = Exploration<depth_first_search<bound<bound_functions::Preemptions>>>;
 
       dfs_t dfs(required.first, required.second, std::numeric_limits<int>::max());
-      dfs.run({}, output_dir);
+      dfs.run({}, optimization_level, compiler_options, output_dir);
 
       return 0;
    }

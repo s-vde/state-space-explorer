@@ -18,13 +18,17 @@ public:
          "bound-function",
          boost::program_options::value<std::string>()->default_value("preemptions"),
          "the bound function to be used with a Bounded Search based exploration "
-         "(values:preemptions)")(
+         "(values:preemptions)")("c",
+                                 boost::program_options::value<std::string>()->default_value(""),
+                                 "compiler options for compiling the system under test")(
          "i", boost::program_options::value<std::string>(),
          "the system under test, instrumented with the Record-Replay compiler pass")(
          "max", boost::program_options::value<unsigned int>(),
          "the maximum number of executions explored")(
          "o", boost::program_options::value<std::string>(),
          "the directory where output files are dumped")(
+         "opt", boost::program_options::value<std::string>()->default_value("0"),
+         "the optimization level for compiling the system under test")(
          "sufficient-set",
          boost::program_options::value<std::string>()->default_value("persistent"),
          "the sufficient set implementation to be used with DPOR based exploration (values: "

@@ -68,8 +68,8 @@ add_executable(StateSpaceExplorerTest
 ####################
 # COMPILE DEFINITIONS
 
-target_compile_definitions(StateSpaceExplorerTest PRIVATE "LLVM_BIN=${LLVM_BUILD_DIR}/bin")
-target_compile_definitions(StateSpaceExplorerTest PRIVATE "RECORD_REPLAY_BUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}/../libs/record-replay")
+target_compile_definitions(StateSpaceExplorerTest PRIVATE "LLVM_BIN=${LLVM_BIN}")
+target_compile_definitions(StateSpaceExplorerTest PRIVATE "RECORD_REPLAY_BUILD_DIR=${RECORD_REPLAY_BUILD_DIR}")
 target_compile_definitions(StateSpaceExplorerTest PRIVATE "TESTS_BUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}")
 target_compile_definitions(StateSpaceExplorerTest PRIVATE "TEST_PROGRAMS_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test_programs")
 

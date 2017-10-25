@@ -40,7 +40,8 @@ TEST_P(DfsSmokeTest, DfsRunsForAtLeastGivenNrOfExecutions)
              std::numeric_limits<int>::max());
    dfs.set_settings({false, false, scheduler::timeout_t{200}});
 
-   ASSERT_NO_THROW(dfs.run({}, test_output_dir() / "output"));
+   ASSERT_NO_THROW(dfs.run({}, GetParam().optimization_level, GetParam().compiler_options,
+                           test_output_dir() / "output"));
 }
 
 
