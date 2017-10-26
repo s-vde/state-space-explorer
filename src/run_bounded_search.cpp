@@ -45,8 +45,7 @@ int main(int argc, char* argv[])
       {
          exploration::bounded_search<bound_functions::Preemptions> bs(required.first,
                                                                       required.second, bound);
-         bs.run({}, optimization_level, compiler_options,
-                output_dir.string() + "-preemptions-" + std::to_string(bound));
+         bs.run({}, optimization_level, compiler_options, output_dir);
          return 0;
       }
       else
