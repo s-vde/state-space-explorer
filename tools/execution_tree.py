@@ -255,7 +255,7 @@ def parse_trace(file_name):
 def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
     operands_lists = list(map(lambda operand_map :
         { address for address, names in operand_map.items() \
-            if (len(list(filter(lambda name : name in selected_operands, names)))) > 0 }
+            if (len(list(filter(lambda name : name.split('[')[0] in selected_operands, names)))) > 0 }
     , operands_maps))
     
     for schedule, trace, operands_list in zip(schedules, traces, operands_lists):
