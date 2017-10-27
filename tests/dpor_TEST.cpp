@@ -1,4 +1,6 @@
 
+#include <test_helpers.hpp>
+
 #include <depth_first_search.hpp>
 #include <dpor.hpp>
 #include <exploration.hpp>
@@ -8,33 +10,13 @@
 
 #include <gtest/gtest.h>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/preprocessor/stringize.hpp>
-
 
 namespace exploration {
 namespace test {
-namespace detail {
-
-static const auto test_programs_dir =
-   boost::filesystem::path(BOOST_PP_STRINGIZE(TEST_PROGRAMS_DIR));
-static const auto tests_build_dir = boost::filesystem::path{BOOST_PP_STRINGIZE(TESTS_BUILD_DIR)};
-static const auto test_data_dir = tests_build_dir / "test_data";
-
-} // end namespace detail
 
 //--------------------------------------------------------------------------------------------------
 
-struct DporNrExecutionsTestData
-{
-   boost::filesystem::path test_program;
-   std::string optimization_level;
-   std::string compiler_options;
-   unsigned int expected_nr_executions;
-
-}; // end struct NrExplorationsTestData
-
-struct DporNrExecutionsTest : public ::testing::TestWithParam<DporNrExecutionsTestData>
+struct DporNrExecutionsTest : public ::testing::TestWithParam<NrExecutionsTestData>
 {
    boost::filesystem::path test_output_dir() const
    {
@@ -61,14 +43,14 @@ TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
 
 INSTANTIATE_TEST_CASE_P(
    DporNrExecutionsTests, DporNrExecutionsTest,
-   ::testing::Values(DporNrExecutionsTestData{"shared_memory_access_non_concurrent.cpp", "0",
+   ::testing::Values(NrExecutionsTestData{"shared_memory_access_non_concurrent.cpp", "0",
                                               "-std=c++14", 1},
                      // @cite Flanagan:2005:DPR:1040305.1040315 page 8
-                     DporNrExecutionsTestData{
+                     NrExecutionsTestData{
                         "../../libs/record-replay/tests/test_programs/real_world/filesystem.c", "0",
                         "-DNR_THREADS=13", 1},
                      // @cite Abdulla:2014:ODP:2535838.2535845
-                     DporNrExecutionsTestData{"benchmarks/readers_nonpreemptive.c", "0", "", 5}));
+                     NrExecutionsTestData{"benchmarks/readers_nonpreemptive.c", "0", "", 5}));
 
 //--------------------------------------------------------------------------------------------------
 

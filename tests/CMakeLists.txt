@@ -12,6 +12,8 @@ include_directories(${GOOGLE_TEST}/googletest/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 set(CPP_UTILS   ${CMAKE_CURRENT_SOURCE_DIR}/../libs/cpp-utils)
 include_directories(${CPP_UTILS}/src)
 
