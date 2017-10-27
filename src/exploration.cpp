@@ -10,10 +10,11 @@ namespace detail {
 
 program_model::Execution replay(const scheduler::program_t& program,
                                 const scheduler::schedule_t& schedule,
-                                const boost::filesystem::path& records_dir)
+                                const boost::filesystem::path& records_dir,
+                                const boost::optional<scheduler::timeout_t>& timeout)
 {
    DEBUGF("StateSpaceExplorer", "replay", program, "under schedule " << schedule << "\n");
-   scheduler::run_under_schedule(program, schedule, boost::none, records_dir);
+   scheduler::run_under_schedule(program, schedule, timeout, records_dir);
 
    program_model::Execution execution;
    if (!utils::io::read_from_file((records_dir / "record.txt").string(), execution))

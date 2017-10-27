@@ -48,12 +48,14 @@ set(UTILS_SOURCES
 # LIBRARY
 
 add_executable(StateSpaceExplorerTest
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/bound.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/dependence.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/depth_first_search.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/dpor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/exploration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/happens_before.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/vector_clock.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/bound_functions/preemptions.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/sufficient_sets/persistent_set.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/sufficient_sets/sleep_set.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../src/sufficient_sets/sufficient_set.cpp

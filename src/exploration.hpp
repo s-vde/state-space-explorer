@@ -33,7 +33,8 @@ namespace detail {
 
 program_model::Execution replay(const scheduler::program_t& program,
                                 const scheduler::schedule_t& schedule,
-                                const boost::filesystem::path& records_dir);
+                                const boost::filesystem::path& records_dir,
+                                const boost::optional<scheduler::timeout_t>& timeout);
 
 void move_records(unsigned int nr, const boost::filesystem::path& source_dir);
 
@@ -42,12 +43,13 @@ void move_records(unsigned int nr, const boost::filesystem::path& source_dir);
 //--------------------------------------------------------------------------------------------------
 
 
-struct settings
+struct Settings
 {
    bool keep_records = false;
    bool keep_logs = false;
+   boost::optional<scheduler::timeout_t> timeout = boost::none;
 
-}; // end struct settings
+}; // end struct Settings
 
 //--------------------------------------------------------------------------------------------------
 
@@ -87,6 +89,8 @@ public:
 
    ExplorationStatistics statistics() const;
 
+   void set_settings(const Settings& settings) { m_settings = settings; }
+
 protected:
    using execution = program_model::Execution;
    using transition = typename execution::transition_t;
@@ -98,7 +102,7 @@ protected:
    ExplorationStatistics mStatistics;
    bool mDone;
    std::ofstream mLogSchedules;
-   settings m_settings;
+   Settings m_settings;
 
    static const std::string name;
    static std::string outputname();
@@ -145,7 +149,8 @@ public:
       while (!mDone && mStatistics.nr_explorations() < mMaxNrExplorations)
       {
          mMode.write_scheduler_files();
-         mExecution = detail::replay(mProgram, mSchedule, output_dir / "records");
+         mExecution =
+            detail::replay(mProgram, mSchedule, output_dir / "records", m_settings.timeout);
          mMode.reset();
          if (mStatistics.nr_explorations() > 0 || mMode.check_valid(mExecution.contains_locks()))
          {
