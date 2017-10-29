@@ -96,8 +96,8 @@ namespace exploration
             const HappensBefore<Dependence>& HB,
             const backtrack_point& point)
         {
-            DEBUGF(outputname(), "add_backtrack_point", point, "\n");
 			const State& s = E[point.index].pre();
+         DEBUGF(outputname(), "add_backtrack_point", point, s << "\n");
 			SufficientSet& s_ = S[point.index-1];
             // Prioritize point.tid
             if (s.is_enabled(point.tid) && s_.sleepset().is_awake(point.tid)) {

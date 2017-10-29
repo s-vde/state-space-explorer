@@ -48,8 +48,8 @@ VectorClock create_clock(const execution_t& execution,
 
    VectorClock clock(execution.nr_threads());
    DEBUGF(text_color("HappensBefore", utils::io::Color::YELLOW), "create_clock",
-          "pre(execution, " << index << ")." << instruction, "\n");
-   DEBUG(" = MAX( " << clock);
+          "pre(execution, " << index << ")." << boost::apply_visitor(program_model::instruction_to_short_string(), instruction), "\n= MAX (\n");
+   DEBUG("\t" << clock << "\n");
 
    int min = min_element(clock);
    const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
@@ -65,10 +65,10 @@ VectorClock create_clock(const execution_t& execution,
          clock.max(happens_before_relation[j]);
          clock[tid_j] = j;
          min = min_element(clock);
-         DEBUG(", " << happens_before_relation[j] << "[" << tid_j << ":=" << j << "]");
+         DEBUG("\t" << happens_before_relation[j] << "[" << tid_j << ":=" << j << "]\n");
       }
    }
-   DEBUG(" ) = " << clock << "\n");
+   DEBUG(") = " << clock << "\n");
    return clock;
 }
 
@@ -276,7 +276,8 @@ VectorClock::index_t HappensBefore<Dependence>::max_dependent(
    VectorClock C = clock(index, instruction);
 
    DEBUGF(outputname(), "max_dependent",
-          "[" << index << "], " << instruction << (apply_coenabled ? ", coenabled" : ""), "\n");
+          "[" << index << "], " << boost::apply_visitor(
+             program_model::instruction_to_short_string(), instruction) << (apply_coenabled ? ", coenabled" : ""), "\n");
 
    const auto tid = boost::apply_visitor(program_model::get_tid(), instruction);
 
@@ -295,6 +296,7 @@ VectorClock::index_t HappensBefore<Dependence>::max_dependent(
       while (*max_it > 0 && (!Dependence::dependent(mE[*max_it].instr(), instruction) ||
                              !Dependence::coenabled(mE[*max_it].instr(), instruction)))
       {
+         DEBUG(boost::apply_visitor(program_model::instruction_to_short_string(), mE[*max_it].instr()));
          program_model::Thread::tid_t max_tid = std::distance(C.cbegin(), max_it);
          C[max_tid] = mHB[*max_it][max_tid];
          max_it = std::max_element(C.cbegin(), C.cend());

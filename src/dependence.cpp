@@ -58,6 +58,17 @@ bool is_lock(const instruction_t& instruction)
 
 //-------------------------------------------------------------------------------------------------
 
+bool is_trylock(const instruction_t& instruction)
+{
+   if (const auto* lock_instr = boost::get<program_model::lock_instruction>(&instruction))
+   {
+      return lock_instr->operation() == program_model::lock_operation::Trylock;
+   }
+   return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 bool is_unlock(const instruction_t& instruction)
 {
    if (const auto* lock_instr = boost::get<program_model::lock_instruction>(&instruction))
@@ -71,7 +82,8 @@ bool is_unlock(const instruction_t& instruction)
 
 bool one_lock(const instruction_t& instruction_1, const instruction_t& instruction_2)
 {
-   return is_lock(instruction_1) || is_lock(instruction_2);
+   return (is_lock(instruction_1) || is_trylock(instruction_1)) || 
+      (is_lock(instruction_2) || is_trylock(instruction_2));
 }
 
 //-------------------------------------------------------------------------------------------------
