@@ -1,7 +1,7 @@
 
-#include "dfs_TEST.cpp"
+// #include "dfs_TEST.cpp"
 #include "dpor_TEST.cpp"
-#include "vector_clock_TEST.cpp"
+// #include "vector_clock_TEST.cpp"
 
 #include <gtest/gtest.h>
 
