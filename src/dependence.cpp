@@ -50,7 +50,8 @@ bool is_lock(const instruction_t& instruction)
 {
    if (const auto* lock_instr = boost::get<program_model::lock_instruction>(&instruction))
    {
-      return lock_instr->operation() == program_model::lock_operation::Lock;
+      return lock_instr->operation() == program_model::lock_operation::Lock ||
+         lock_instr->operation() == program_model::lock_operation::Trylock;
    }
    return false;
 }
