@@ -247,32 +247,37 @@ def parse_trace(file_name):
     for line in lines[0:len(lines)-1]:
         execution.append(parse_instruction(line, operands))
     return (execution, operands)
-    
-#---------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # filter tree
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
-    operands_lists = list(map(lambda operand_map :
-        { address for address, names in operand_map.items() \
-            if (len(list(filter(lambda name : name.split('[')[0] in selected_operands, names)))) > 0 }
-    , operands_maps))
-    
-    for schedule, trace, operands_list in zip(schedules, traces, operands_lists):
+    operands_lists = \
+        list(map(lambda operand_map:
+                 {address for address, names in operand_map.items()
+                  if (len(list(filter(lambda name:
+                                      name.split('[')[0] in selected_operands,
+                                      names)))) > 0},
+                 operands_maps))
+
+    for schedule, trace, operands_list in zip(schedules, traces,
+                                              operands_lists):
         src_id = node_of_schedule(schedule[0: 0])
         for index in range(0, len(schedule)):
             dst_id = node_of_schedule(schedule[0: index+1])
             if tree.has_node(src_id) and tree.has_node(dst_id):
                 if not trace[index][2] in operands_list:
-                    if index < len(schedule)-1:              
-                        remove_edge_and_nodes(tree, src_id, dst_id, node_of_schedule(schedule[0: index+2]))
+                    if index < len(schedule)-1:
+                        remove_edge_and_nodes(tree, src_id, dst_id,
+                                              node_of_schedule(schedule[0: index+2]))
                     else:
                         remove_edge_and_nodes(tree, src_id, dst_id)
                 else:
                     src_id = dst_id
 
-
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def create_tree_from_schedules(file_name):
     tree = execution_tree()
