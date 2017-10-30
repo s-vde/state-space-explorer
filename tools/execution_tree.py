@@ -55,11 +55,11 @@ def dummy_node_of_schedule(schedule, prefix="s"):
     
 #---------------------------------------------------------------------------------------------------
 
-def add_node(tree, node_id):
+def add_node(tree, node_id, label=""):
     if not tree.has_node(node_id):
         tree.add_node(node_id)
         node = tree.get_node(node_id)
-        node.attr['label'] = ""
+        node.attr['xlabel'] = label
         dummy_instr_id = "_instr_%s" % node_id
         tree.add_node(dummy_instr_id, width='0')
 
@@ -89,9 +89,9 @@ def reset_node_shape(tree, node_id):
 
 #---------------------------------------------------------------------------------------------------
 
-def add_to_node_label(tree, node_id, label, color="black"):
+def set_node_label(tree, node_id, label, color="black"):
     node = tree.get_node(node_id)
-    node.attr['xlabel'] = "  %s  %s  " % (node.attr['xlabel'], label)
+    node.attr['xlabel'] = label
     node.attr['fontcolor'] = color
 
 
@@ -162,9 +162,27 @@ def set_branch_color(tree, schedule, color, fontcolor=None):
         node_id = child_node_id
 
 
-#---------------------------------------------------------------------------------------------------
-# schedule    
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# schedule
+# -----------------------------------------------------------------------------
+
+
+def _get_status_node_id(tree, schedule):
+    last_node_id = node_of_schedule(schedule)
+    return "%s.status" % (last_node_id)
+
+# -----------------------------------------------------------------------------
+
+
+def _add_status_node(tree, schedule):
+    last_node_id = node_of_schedule(schedule)
+    status_node_id = _get_status_node_id(tree, schedule)
+    add_node(tree, status_node_id)
+    add_edge(tree, last_node_id, status_node_id, "")
+    set_edge_color(tree, last_node_id, status_node_id, "white", "white", 0)
+
+# -----------------------------------------------------------------------------
+
 
 def add_schedule(tree, schedule):
     node_id = "s"
@@ -174,8 +192,10 @@ def add_schedule(tree, schedule):
         add_node(tree, child_node_id)
         add_edge(tree, node_id, child_node_id, str(thread_id))
         node_id = child_node_id
-        
-#---------------------------------------------------------------------------------------------------
+    _add_status_node(tree, schedule)
+
+# -----------------------------------------------------------------------------
+
 
 def remove_schedule(tree, schedule, from_index):
     node_id = "s"
@@ -224,14 +244,21 @@ def dump(tree, output_dir):
 # trace
 #---------------------------------------------------------------------------------------------------
 
-def add_trace(tree, schedule, trace):
+def add_trace(tree, schedule, trace, status):
     for index in range(0, len(schedule)):
         instruction = trace[index]
         instruction_str = "  %s %s %s %s  " % (instruction[0], instruction[1], instruction[2], instruction[3])
         node = tree.get_node(dummy_node_of_schedule(schedule[0: index+1]))
         node.attr['xlabel'] = instruction_str
+    set_status(tree, schedule, status)
 
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+
+def set_status(tree, schedule, status):
+    set_node_label(tree, _get_status_node_id(tree, schedule), status)
+
+# -----------------------------------------------------------------------------
 
 def parse_instruction(line, operands):
     instruction = line.split(" ")[1:]
@@ -244,24 +271,25 @@ def parse_instruction(line, operands):
     if name not in operands[address]:
         operands[address].append(name)
     return instruction
-    
-#---------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+
 
 def parse_trace(file_name):
-    file = open(file_name,'r')
+    file = open(file_name, 'r')
     lines = file.readlines()
     operands = dict()
-    execution = []
+    trace = []
     for line in lines[0:len(lines)-1]:
-        execution.append(parse_instruction(line, operands))
-    return (execution, operands)
+        trace.append(parse_instruction(line, operands))
+    return (trace, operands, lines[len(lines)-1])
 
 # -----------------------------------------------------------------------------
 # filter tree
 # -----------------------------------------------------------------------------
 
 
-def __create_selected_operands_map(operands_map, selected_operands):
+def _create_selected_operands_map(operands_map, selected_operands):
     selected_operands_map = dict()
     for address, names in operands_map.items():
         names_intersection = \
@@ -278,8 +306,8 @@ def __create_selected_operands_map(operands_map, selected_operands):
 def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
     selected_operands_maps = \
         list(map(lambda operands_map:
-                 __create_selected_operands_map(operands_map,
-                                                selected_operands),
+                 _create_selected_operands_map(operands_map,
+                                               selected_operands),
                  operands_maps))
 
     for schedule, trace, selected_operands_map in zip(schedules, traces,

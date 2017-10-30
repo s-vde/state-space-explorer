@@ -29,19 +29,20 @@ def run(schedules, records_dir, output_dir, name_filter=None):
 
     traces = []
     operands_maps = []
+    statuses = []
     for root, dirs, files in os.walk(records_dir):
         short_records = list(filter(lambda filename:
                                     filename.startswith("record_short"),
                                     files))
         short_records.sort(key=natural_keys)
         for short_record in short_records:
-            trace, operands_map = ext.parse_trace(os.path.join(root,
-                                                               short_record))
+            trace, operands_map, status = ext.parse_trace(os.path.join(root, short_record))
             traces.append(trace)
             operands_maps.append(operands_map)
+            statuses.append(status)
 
-    for schedule, trace in zip(schedules, traces):
-        ext.add_trace(tree, schedule, trace)
+    for schedule, trace, status in zip(schedules, traces, statuses):
+        ext.add_trace(tree, schedule, trace, status)
 
     ext.dump(tree, output_dir)
 
