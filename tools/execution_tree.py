@@ -107,6 +107,14 @@ def add_edge(tree, source_id, dest_id, label):
     dummy_node = tree.get_node(dummy_id)
     dummy_node.attr['xlabel'] = ("  %s  " % label)
 
+# -----------------------------------------------------------------------------
+
+
+def set_edge_label(tree, source_id, dest_id, label):
+    dummy_id = "_instr_%s" % dest_id
+    dummy_node = tree.get_node(dummy_id)
+    dummy_node.attr['xlabel'] = ("  %s  " % label)
+
 #---------------------------------------------------------------------------------------------------
 
 def remove_edge_and_nodes(tree, src_id, dst_id, next_id=None):
@@ -219,7 +227,7 @@ def dump(tree, output_dir):
 def add_trace(tree, schedule, trace):
     for index in range(0, len(schedule)):
         instruction = trace[index]
-        instruction_str = "  %s %s %s  " % (instruction[0], instruction[1], instruction[3])
+        instruction_str = "  %s %s %s %s  " % (instruction[0], instruction[1], instruction[2], instruction[3])
         node = tree.get_node(dummy_node_of_schedule(schedule[0: index+1]))
         node.attr['xlabel'] = instruction_str
 
@@ -253,28 +261,46 @@ def parse_trace(file_name):
 # -----------------------------------------------------------------------------
 
 
+def __create_selected_operands_map(operands_map, selected_operands):
+    selected_operands_map = dict()
+    for address, names in operands_map.items():
+        names_intersection = \
+            list(filter(lambda name:
+                        name.split('[')[0] in selected_operands,
+                        names))
+        if len(names_intersection) > 0:
+            selected_operands_map[address] = names_intersection[0]
+    return selected_operands_map
+
+# -----------------------------------------------------------------------------
+
+
 def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
-    operands_lists = \
-        list(map(lambda operand_map:
-                 {address for address, names in operand_map.items()
-                  if (len(list(filter(lambda name:
-                                      name.split('[')[0] in selected_operands,
-                                      names)))) > 0},
+    selected_operands_maps = \
+        list(map(lambda operands_map:
+                 __create_selected_operands_map(operands_map,
+                                                selected_operands),
                  operands_maps))
 
-    for schedule, trace, operands_list in zip(schedules, traces,
-                                              operands_lists):
+    for schedule, trace, selected_operands_map in zip(schedules, traces,
+                                                      selected_operands_maps):
         src_id = node_of_schedule(schedule[0: 0])
         for index in range(0, len(schedule)):
             dst_id = node_of_schedule(schedule[0: index+1])
             if tree.has_node(src_id) and tree.has_node(dst_id):
-                if not trace[index][2] in operands_list:
+                instruction = trace[index]
+                if not instruction[2] in selected_operands_map:
                     if index < len(schedule)-1:
                         remove_edge_and_nodes(tree, src_id, dst_id,
                                               node_of_schedule(schedule[0: index+2]))
                     else:
                         remove_edge_and_nodes(tree, src_id, dst_id)
                 else:
+                    # update the name
+                    instruction_str = "  %s %s %s  " \
+                        % (instruction[0], instruction[1],
+                           selected_operands_map[instruction[2]])
+                    set_edge_label(tree, src_id, dst_id, instruction_str)
                     src_id = dst_id
 
 # -----------------------------------------------------------------------------
