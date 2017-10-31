@@ -9,7 +9,7 @@ import pygraphviz as pgv
 def execution_tree(color='black', nodesep='3'):
     tree = pgv.AGraph(strict=False, directed=True)
 
-    fontsize = '22'
+    fontsize = '24'
 
     tree.graph_attr['dpi'] = '300'
     tree.graph_attr['strict'] = 'False'
@@ -19,6 +19,8 @@ def execution_tree(color='black', nodesep='3'):
     tree.graph_attr['nodesep'] = nodesep
     tree.graph_attr['ordering'] = 'out'
     tree.graph_attr['forcelabels'] = 'True'
+    tree.graph_attr['bgcolor'] = 'transparent'
+    tree.graph_attr['fontname'] = 'Ubuntu Mono'
     # node style
     tree.node_attr['shape'] = 'point'
     tree.node_attr['fixedsize'] = 'true'
@@ -31,7 +33,7 @@ def execution_tree(color='black', nodesep='3'):
     # edge style
     tree.edge_attr['arrowsize'] = '0.5'
     tree.edge_attr['weight'] = '100'
-    tree.edge_attr['penwidth'] = 1
+    tree.edge_attr['penwidth'] = 2
     tree.edge_attr['color'] = color
     tree.edge_attr['fontsize'] = fontsize
 
@@ -135,7 +137,7 @@ def remove_edge_and_nodes(tree, src_id, dst_id, next_id=None):
 # highlighting
 #---------------------------------------------------------------------------------------------------
     
-def set_edge_color(tree, source_id, dest_id, color, fontcolor, penwidth):
+def set_edge_color(tree, source_id, dest_id, color, fontcolor):
     dummy_id = "_instr_%s" % dest_id
     
     nodes = [tree.get_node(source_id), tree.get_node(dummy_id), tree.get_node(dest_id)]
@@ -147,7 +149,6 @@ def set_edge_color(tree, source_id, dest_id, color, fontcolor, penwidth):
     edges = [tree.get_edge(source_id, dummy_id), tree.get_edge(dummy_id, dest_id)]
     for edge in edges:
         edge.attr['color'] = color
-        edge.attr['penwidth'] = penwidth
     
 # -----------------------------------------------------------------------------
 
@@ -159,7 +160,7 @@ def set_branch_color(tree, schedule, color, fontcolor=None):
     node_id = "s"
     for thread_id in schedule:
         child_node_id = "%s.%d" % (node_id, thread_id)
-        set_edge_color(tree, node_id, child_node_id, color, fontcolor, 3)
+        set_edge_color(tree, node_id, child_node_id, color, fontcolor)
         node_id = child_node_id
     status_node_id = _get_status_node_id(tree, schedule)
     set_node_fontcolor(tree, status_node_id, fontcolor)
@@ -182,7 +183,8 @@ def _add_status_node(tree, schedule):
     status_node_id = _get_status_node_id(tree, schedule)
     add_node(tree, status_node_id)
     add_edge(tree, last_node_id, status_node_id, "")
-    set_edge_color(tree, last_node_id, status_node_id, "white", "white", 0)
+    set_edge_color(tree, last_node_id, status_node_id,
+                   "transparent", "transparent")
 
 # -----------------------------------------------------------------------------
 
@@ -241,7 +243,12 @@ def dump(tree, output_dir, filename, export_formats):
     for export_format in export_formats:
         export_file = os.path.join(output_dir,
                                    "%s.%s" % (filename, export_format))
-        os.system("dot %s -T%s -o %s" % (dot_file, export_format, export_file))
+        os.system("dot %s -T%s -Nfontname=\"%s\" -Efontname=\"%s\" -o %s"
+                  % (dot_file,
+                     export_format,
+                     tree.graph_attr['fontname'],
+                     tree.graph_attr['fontname'],
+                     export_file))
 
 
 #---------------------------------------------------------------------------------------------------
@@ -289,7 +296,7 @@ def parse_trace(file_name):
     return (trace, operands, lines[len(lines)-1])
 
 # -----------------------------------------------------------------------------
-# filter tree
+# prune_tree
 # -----------------------------------------------------------------------------
 
 
@@ -307,7 +314,7 @@ def _create_selected_operands_map(operands_map, selected_operands):
 # -----------------------------------------------------------------------------
 
 
-def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
+def prune_tree(tree, schedules, traces, operands_maps, selected_operands):
     selected_operands_maps = \
         list(map(lambda operands_map:
                  _create_selected_operands_map(operands_map,
@@ -321,19 +328,29 @@ def filter_tree(tree, schedules, traces, operands_maps, selected_operands):
             dst_id = node_of_schedule(schedule[0: index+1])
             if tree.has_node(src_id) and tree.has_node(dst_id):
                 instruction = trace[index]
-                if not instruction[2] in selected_operands_map:
-                    if index < len(schedule)-1:
-                        remove_edge_and_nodes(tree, src_id, dst_id,
-                                              node_of_schedule(schedule[0: index+2]))
-                    else:
-                        remove_edge_and_nodes(tree, src_id, dst_id)
+                new_label = ""
+
+                if instruction[1] in ["Spawn", "Join"]:
+                    new_label = "  %s %s %s  " \
+                        % (instruction[0], instruction[1], instruction[2])
+
+                elif instruction[2] not in selected_operands_map:
+                    # if index < len(schedule)-1:
+                    #     remove_edge_and_nodes(tree, src_id, dst_id,
+                    #                           node_of_schedule(schedule[0:index+2]))
+                    # else:
+                    #     remove_edge_and_nodes(tree, src_id, dst_id)
+                    # continue
+                    new_label = "  %s %s %s  " \
+                        % (instruction[0], instruction[1], instruction[2])
+
                 else:
-                    # update the name
-                    instruction_str = "  %s %s %s  " \
+                    new_label = "  %s %s %s  " \
                         % (instruction[0], instruction[1],
                            selected_operands_map[instruction[2]])
-                    set_edge_label(tree, src_id, dst_id, instruction_str)
-                    src_id = dst_id
+
+                set_edge_label(tree, src_id, dst_id, new_label)
+                src_id = dst_id
 
 # -----------------------------------------------------------------------------
 

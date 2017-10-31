@@ -26,27 +26,33 @@ def natural_keys(text):
 # ------------------------------------------------------------------------------
 
 
-def create_play(tree, output_dir, schedules, traces, operands_map,
-                name_filter=None):
+def create_animation(tree, output_dir, export_formats, schedules, traces,
+                     operands_maps, name_filter=None):
     for schedule in schedules:
-        ext.set_branch_color(tree, schedule, "white")
+        ext.set_branch_color(tree, schedule, "transparent", "transparent")
 
     for index in range(0, len(schedules)):
         ext.set_branch_color(tree, schedules[index], "black")
+        ext.dump(tree, os.path.join(output_dir, "full"), str(index),
+                 export_formats)
 
-        # tree_ = copy(tree)
-        # if name_filter is not None:
-        #     ext.filter_tree(_tree, schedules, traces, operands_maps,
-        #                     name_filter)
-        ext.dump(tree, output_dir, str(index), ["eps"])
+        # name filtering
+        tree_ = tree.copy()
+        if name_filter is not None:
+            ext.prune_tree(tree_, schedules, traces, operands_maps,
+                           name_filter)
+        ext.dump(tree_, os.path.join(output_dir, "pruned"), str(index),
+                 export_formats)
 
-        ext.set_branch_color(tree, schedules[index], "black", "white")
+        # reset the branch's font color
+        ext.set_branch_color(tree, schedules[index], "black", "transparent")
 
 # ------------------------------------------------------------------------------
 
 
-def run(schedules, records_dir, output_dir, name_filter=None):
+def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
     tree, schedules = ext.create_tree_from_schedules(schedules)
+    tree.graph_attr['nodesep'] = nodesep
 
     traces = []
     operands_maps = []
@@ -57,27 +63,36 @@ def run(schedules, records_dir, output_dir, name_filter=None):
                                     files))
         short_records.sort(key=natural_keys)
         for short_record in short_records:
-            trace, operands_map, status = ext.parse_trace(os.path.join(root, short_record))
+            trace, operands_map, status = \
+                ext.parse_trace(os.path.join(root, short_record))
             traces.append(trace)
             operands_maps.append(operands_map)
             statuses.append(status)
 
-    # tree.graph_attr['nodesep'] = 1
-    # ext.dump(tree, output_dir, "schedules", ["eps"])
-    # tree.graph_attr['nodesep'] = 3
+    export_formats = ["eps", "png"]
+
+    # schedules
+    tree.graph_attr['nodesep'] = 1
+    ext.dump(tree, output_dir, "full_schedules", export_formats)
+    tree.graph_attr['nodesep'] = 3
 
     # add traces
     for schedule, trace, status in zip(schedules, traces, statuses):
         ext.add_trace(tree, schedule, trace, status)
-    ext.dump(tree, os.path.join(output_dir, "temp"), "traces", ["eps"])
+    ext.dump(tree, output_dir, "full_traces", export_formats)
+
+    create_animation(tree,
+                     os.path.join(output_dir, "animations"),
+                     export_formats,
+                     schedules,
+                     traces,
+                     operands_maps,
+                     name_filter)
 
     # apply name filter
-    # if name_filter is not None:
-    #     ext.filter_tree(tree, schedules, traces, operands_maps, name_filter)
-    # ext.dump(tree, output_dir, "full_pruned", ["eps"])
-
-    create_play(tree, os.path.join(output_dir, "plays"), schedules, traces,
-                operands_maps, name_filter)
+    if name_filter is not None:
+        ext.prune_tree(tree, schedules, traces, operands_maps, name_filter)
+    ext.dump(tree, output_dir, "full_pruned", export_formats)
 
 # -----------------------------------------------------------------------------
 # main
@@ -86,11 +101,12 @@ def run(schedules, records_dir, output_dir, name_filter=None):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "f:i:o:", [])
+        opts, args = getopt.getopt(argv, "f:i:o:s:", [])
     except getopt.GetoptError:
         sys.exit(2)
 
     name_filter = None
+    nodesep = 3
 
     for opt, arg in opts:
         if opt == '-f':
@@ -99,12 +115,16 @@ def main(argv):
             program_records_dir = arg
         if opt == '-o':
             output_dir = arg
+        if opt == '-s':
+            nodesep = int(arg)
 
     print ("==========\nGenerating search tree for %s" % (program_records_dir))
+    print ("nodesep:\t%d" % nodesep)
     run(os.path.join(program_records_dir, "schedules.txt"),
         os.path.join(program_records_dir, "records"),
         output_dir,
-        name_filter)
+        name_filter=name_filter,
+        nodesep=nodesep)
     print ("==========")
 
 # -----------------------------------------------------------------------------
