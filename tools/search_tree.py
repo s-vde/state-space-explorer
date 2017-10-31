@@ -41,7 +41,8 @@ def create_animation(tree, output_dir, export_formats, schedules, traces,
 # ------------------------------------------------------------------------------
 
 
-def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
+def run(schedules, records_dir, output_dir, generate_animation=False,
+        name_filter=None, nodesep=3):
     tree, schedules = ext.create_tree_from_schedules(schedules)
     tree.graph_attr['nodesep'] = nodesep
 
@@ -62,8 +63,12 @@ def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
 
     export_formats = ["eps", "png"]
 
+    # add status
+    for schedule, status in zip(schedules, statuses):
+        ext.set_status(tree, schedule, status)
+
     # schedules
-    tree.graph_attr['nodesep'] = 1
+    tree.graph_attr['nodesep'] = 2
     ext.dump(tree, output_dir, "full_schedules", export_formats)
     tree.graph_attr['nodesep'] = nodesep
 
@@ -78,13 +83,14 @@ def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
                                 name_filter)
     ext.dump(tree, output_dir, "full_traces_nice", export_formats)
 
-    create_animation(tree,
-                     os.path.join(output_dir, "animations"),
-                     export_formats,
-                     schedules,
-                     traces,
-                     operands_maps,
-                     name_filter)
+    if generate_animation:
+        create_animation(tree,
+                         os.path.join(output_dir, "animations"),
+                         export_formats,
+                         schedules,
+                         traces,
+                         operands_maps,
+                         name_filter)
 
 # -----------------------------------------------------------------------------
 # main
@@ -93,11 +99,12 @@ def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "f:i:o:s:", [])
+        opts, args = getopt.getopt(argv, "f:i:o:a:s:", [])
     except getopt.GetoptError:
         sys.exit(2)
 
     name_filter = None
+    generate_animation = False
     nodesep = 3
 
     for opt, arg in opts:
@@ -107,6 +114,9 @@ def main(argv):
             program_records_dir = arg
         if opt == '-o':
             output_dir = arg
+        if opt == '-a':
+            if arg == "true":
+                generate_animation = True
         if opt == '-s':
             nodesep = int(arg)
 
@@ -115,6 +125,7 @@ def main(argv):
     run(os.path.join(program_records_dir, "schedules.txt"),
         os.path.join(program_records_dir, "records"),
         output_dir,
+        generate_animation=generate_animation,
         name_filter=name_filter,
         nodesep=nodesep)
     print ("==========")

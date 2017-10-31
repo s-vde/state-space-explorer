@@ -259,8 +259,9 @@ def dump(tree, output_dir, filename, export_formats):
 # -----------------------------------------------------------------------------
 
 
-def _set_status(tree, schedule, status):
-    set_node_label(tree, _get_status_node_id(tree, schedule), status)
+def set_status(tree, schedule, status):
+    if not status == "DONE":
+        set_node_label(tree, _get_status_node_id(tree, schedule), status)
 
 # -----------------------------------------------------------------------------
 
@@ -276,7 +277,6 @@ def add_trace(tree, schedule, trace, status):
         source = tree.get_node(node_of_schedule(schedule[0: index+1]))
         dest = tree.get_node(node_of_schedule(schedule[0: index+2]))
         set_edge_label(tree, source, dest, instruction_str)
-    _set_status(tree, schedule, status)
 
 # -----------------------------------------------------------------------------
 # parse_trace
