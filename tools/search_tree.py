@@ -33,16 +33,7 @@ def create_animation(tree, output_dir, export_formats, schedules, traces,
 
     for index in range(0, len(schedules)):
         ext.set_branch_color(tree, schedules[index], "black")
-        ext.dump(tree, os.path.join(output_dir, "full"), str(index),
-                 export_formats)
-
-        # name filtering
-        tree_ = tree.copy()
-        if name_filter is not None:
-            ext.prune_tree(tree_, schedules, traces, operands_maps,
-                           name_filter)
-        ext.dump(tree_, os.path.join(output_dir, "pruned"), str(index),
-                 export_formats)
+        ext.dump(tree, output_dir, str(index), export_formats)
 
         # reset the branch's font color
         ext.set_branch_color(tree, schedules[index], "black", "transparent")
@@ -81,6 +72,12 @@ def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
         ext.add_trace(tree, schedule, trace, status)
     ext.dump(tree, output_dir, "full_traces", export_formats)
 
+    # apply operand names
+    if name_filter is not None:
+        ext.apply_operand_names(tree, schedules, traces, operands_maps,
+                                name_filter)
+    ext.dump(tree, output_dir, "full_traces_nice", export_formats)
+
     create_animation(tree,
                      os.path.join(output_dir, "animations"),
                      export_formats,
@@ -88,11 +85,6 @@ def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
                      traces,
                      operands_maps,
                      name_filter)
-
-    # apply name filter
-    if name_filter is not None:
-        ext.prune_tree(tree, schedules, traces, operands_maps, name_filter)
-    ext.dump(tree, output_dir, "full_pruned", export_formats)
 
 # -----------------------------------------------------------------------------
 # main

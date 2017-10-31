@@ -9,7 +9,7 @@ import pygraphviz as pgv
 def execution_tree(color='black', nodesep='3'):
     tree = pgv.AGraph(strict=False, directed=True)
 
-    fontsize = '24'
+    fontsize = '32'
 
     tree.graph_attr['dpi'] = '300'
     tree.graph_attr['strict'] = 'False'
@@ -45,7 +45,8 @@ def execution_tree(color='black', nodesep='3'):
 # -----------------------------------------------------------------------------
 
 
-global_label_padding = ""
+global_label_padding = " "
+global_label_type = "xlabel"
 
 #---------------------------------------------------------------------------------------------------
 # node
@@ -68,7 +69,7 @@ def add_node(tree, node_id, label=""):
     if not tree.has_node(node_id):
         tree.add_node(node_id)
         node = tree.get_node(node_id)
-        node.attr['xlabel'] = label
+        node.attr[global_label_type] = label
 
 #---------------------------------------------------------------------------------------------------
 
@@ -98,7 +99,7 @@ def reset_node_shape(tree, node_id):
 
 def set_node_label(tree, node_id, label, color="black"):
     node = tree.get_node(node_id)
-    node.attr['xlabel'] = label
+    node.attr[global_label_type] = label
     node.attr['fontcolor'] = color
 
 
@@ -115,9 +116,10 @@ def add_edge(tree, source_id, dest_id, label):
 
 def set_edge_label(tree, source_id, dest_id, label):
     edge = tree.get_edge(source_id, dest_id)
-    edge.attr['xlabel'] = ("  %s  " % label)
+    edge.attr[global_label_type] = \
+        "%s%s%s" % (global_label_padding, label, global_label_padding)
 
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # def remove_edge_and_nodes(tree, src_id, dst_id, next_id=None):
 #     dummy_dst_id = "_instr_%s" % dst_id
@@ -306,7 +308,7 @@ def parse_trace(file_name):
     return (trace, operands, lines[len(lines)-1])
 
 # -----------------------------------------------------------------------------
-# prune_tree
+# apply_operand_names
 # -----------------------------------------------------------------------------
 
 
@@ -324,7 +326,8 @@ def _create_selected_operands_map(operands_map, selected_operands):
 # -----------------------------------------------------------------------------
 
 
-def prune_tree(tree, schedules, traces, operands_maps, selected_operands):
+def apply_operand_names(tree, schedules, traces, operands_maps,
+                        selected_operands):
     selected_operands_maps = \
         list(map(lambda operands_map:
                  _create_selected_operands_map(operands_map,
@@ -345,12 +348,6 @@ def prune_tree(tree, schedules, traces, operands_maps, selected_operands):
                         % (instruction[0], instruction[1], instruction[2])
 
                 elif instruction[2] not in selected_operands_map:
-                    # if index < len(schedule)-1:
-                    #     remove_edge_and_nodes(tree, src_id, dst_id,
-                    #                           node_of_schedule(schedule[0:index+2]))
-                    # else:
-                    #     remove_edge_and_nodes(tree, src_id, dst_id)
-                    # continue
                     new_label = "  %s %s %s  " \
                         % (instruction[0], instruction[1], instruction[2])
 
