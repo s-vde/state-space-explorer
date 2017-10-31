@@ -21,7 +21,28 @@ def natural_keys(text):
     '''
     return [atoi(c) for c in re.split('(\d+)', text)]
 
-# -----------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# play
+# ------------------------------------------------------------------------------
+
+
+def create_play(tree, output_dir, schedules, traces, operands_map,
+                name_filter=None):
+    for schedule in schedules:
+        ext.set_branch_color(tree, schedule, "white")
+
+    for index in range(0, len(schedules)):
+        ext.set_branch_color(tree, schedules[index], "black")
+
+        # tree_ = copy(tree)
+        # if name_filter is not None:
+        #     ext.filter_tree(_tree, schedules, traces, operands_maps,
+        #                     name_filter)
+        ext.dump(tree, output_dir, str(index), ["eps"])
+
+        ext.set_branch_color(tree, schedules[index], "black", "white")
+
+# ------------------------------------------------------------------------------
 
 
 def run(schedules, records_dir, output_dir, name_filter=None):
@@ -41,19 +62,22 @@ def run(schedules, records_dir, output_dir, name_filter=None):
             operands_maps.append(operands_map)
             statuses.append(status)
 
-    tree.graph_attr['nodesep'] = 1
-    ext.dump(tree, output_dir, "schedules", ["eps"])
-    tree.graph_attr['nodesep'] = 3
+    # tree.graph_attr['nodesep'] = 1
+    # ext.dump(tree, output_dir, "schedules", ["eps"])
+    # tree.graph_attr['nodesep'] = 3
 
+    # add traces
     for schedule, trace, status in zip(schedules, traces, statuses):
         ext.add_trace(tree, schedule, trace, status)
+    ext.dump(tree, os.path.join(output_dir, "temp"), "traces", ["eps"])
 
-    ext.dump(tree, output_dir, "traces", ["eps"])
+    # apply name filter
+    # if name_filter is not None:
+    #     ext.filter_tree(tree, schedules, traces, operands_maps, name_filter)
+    # ext.dump(tree, output_dir, "full_pruned", ["eps"])
 
-    if name_filter is not None:
-        ext.filter_tree(tree, schedules, traces, operands_maps, name_filter)
-
-    ext.dump(tree, output_dir, "pruned", ["eps"])
+    create_play(tree, os.path.join(output_dir, "plays"), schedules, traces,
+                operands_maps, name_filter)
 
 # -----------------------------------------------------------------------------
 # main

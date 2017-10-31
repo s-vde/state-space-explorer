@@ -149,17 +149,20 @@ def set_edge_color(tree, source_id, dest_id, color, fontcolor, penwidth):
         edge.attr['color'] = color
         edge.attr['penwidth'] = penwidth
     
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 def set_branch_color(tree, schedule, color, fontcolor=None):
-    if fontcolor == None:
+    if fontcolor is None:
         fontcolor = color
-    
+
     node_id = "s"
     for thread_id in schedule:
         child_node_id = "%s.%d" % (node_id, thread_id)
         set_edge_color(tree, node_id, child_node_id, color, fontcolor, 3)
         node_id = child_node_id
+    status_node_id = _get_status_node_id(tree, schedule)
+    set_node_fontcolor(tree, status_node_id, fontcolor)
 
 
 # -----------------------------------------------------------------------------
