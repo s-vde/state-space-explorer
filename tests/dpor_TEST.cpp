@@ -35,7 +35,7 @@ TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
    dpor.run({}, GetParam().optimization_level, GetParam().compiler_options,
             test_output_dir() / "output");
 
-   ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions);
+   ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions) << GetParam();
 }
 
 INSTANTIATE_TEST_CASE_P(

@@ -29,6 +29,17 @@ struct NrExecutionsTestData
 
 }; // end struct NrExecutionTestData
 
+std::ostream& operator<<(std::ostream& os, const NrExecutionsTestData& test_data)
+{
+   os 
+      << "{" 
+      << test_data.test_program.string() << " "
+      << test_data.optimization_level << " "
+      << test_data.compiler_options
+      << "}";
+   return os;
+}
+
 //--------------------------------------------------------------------------------------------------
 
 } // end namespace test
