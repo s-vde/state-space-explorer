@@ -15,7 +15,7 @@ def execution_tree(color='black', nodesep='3'):
     tree.graph_attr['strict'] = 'False'
     tree.graph_attr['directed'] = 'True'
     tree.graph_attr['rankdir'] = 'TB'      # vertical edge direction
-    tree.graph_attr['ranksep'] = '0.3'
+    tree.graph_attr['ranksep'] = '0.8'
     tree.graph_attr['nodesep'] = nodesep
     tree.graph_attr['ordering'] = 'out'
     tree.graph_attr['forcelabels'] = 'True'
@@ -40,6 +40,13 @@ def execution_tree(color='black', nodesep='3'):
     return tree
 
 
+# -----------------------------------------------------------------------------
+# globals
+# -----------------------------------------------------------------------------
+
+
+global_label_padding = ""
+
 #---------------------------------------------------------------------------------------------------
 # node
 #---------------------------------------------------------------------------------------------------
@@ -62,8 +69,6 @@ def add_node(tree, node_id, label=""):
         tree.add_node(node_id)
         node = tree.get_node(node_id)
         node.attr['xlabel'] = label
-        dummy_instr_id = "_instr_%s" % node_id
-        tree.add_node(dummy_instr_id, width='0')
 
 #---------------------------------------------------------------------------------------------------
 
@@ -102,54 +107,48 @@ def set_node_label(tree, node_id, label, color="black"):
 #---------------------------------------------------------------------------------------------------
 
 def add_edge(tree, source_id, dest_id, label):
-    dummy_id = "_instr_%s" % dest_id
-    if not tree.has_edge(source_id, dummy_id):
-        tree.add_edge(source_id, dummy_id, dir='none')
-        tree.add_edge(dummy_id, dest_id)
-    dummy_node = tree.get_node(dummy_id)
-    dummy_node.attr['xlabel'] = ("  %s  " % label)
+    tree.add_edge(source_id, dest_id)
+    set_edge_label(tree, source_id, dest_id, label)
 
 # -----------------------------------------------------------------------------
 
 
 def set_edge_label(tree, source_id, dest_id, label):
-    dummy_id = "_instr_%s" % dest_id
-    dummy_node = tree.get_node(dummy_id)
-    dummy_node.attr['xlabel'] = ("  %s  " % label)
+    edge = tree.get_edge(source_id, dest_id)
+    edge.attr['xlabel'] = ("  %s  " % label)
 
 #---------------------------------------------------------------------------------------------------
 
-def remove_edge_and_nodes(tree, src_id, dst_id, next_id=None):
-    dummy_dst_id = "_instr_%s" % dst_id
-    if tree.has_edge(src_id, dummy_dst_id):
-        tree.remove_edge(src_id, dummy_dst_id)
-    if tree.has_edge(dummy_dst_id, dst_id):
-        tree.remove_edge(dummy_dst_id, dst_id)
-    tree.remove_node(dummy_dst_id)
-    tree.remove_node(dst_id)
-    
-    if not next_id == None:
-        dummy_next_id = "_instr_%s" % next_id
-        tree.add_edge(src_id, dummy_next_id, dir='none')
+# def remove_edge_and_nodes(tree, src_id, dst_id, next_id=None):
+#     dummy_dst_id = "_instr_%s" % dst_id
+#     if tree.has_edge(src_id, dummy_dst_id):
+#         tree.remove_edge(src_id, dummy_dst_id)
+#     if tree.has_edge(dummy_dst_id, dst_id):
+#         tree.remove_edge(dummy_dst_id, dst_id)
+#     tree.remove_node(dummy_dst_id)
+#     tree.remove_node(dst_id)
+#     
+#     if not next_id == None:
+#         dummy_next_id = "_instr_%s" % next_id
+#         tree.add_edge(src_id, dummy_next_id, dir='none')
 
 
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # highlighting
-#---------------------------------------------------------------------------------------------------
-    
+# -----------------------------------------------------------------------------
+
+
 def set_edge_color(tree, source_id, dest_id, color, fontcolor):
-    dummy_id = "_instr_%s" % dest_id
-    
-    nodes = [tree.get_node(source_id), tree.get_node(dummy_id), tree.get_node(dest_id)]
+    nodes = [tree.get_node(source_id), tree.get_node(dest_id)]
     for node in nodes:
         node.attr['color'] = color
         node.attr['fillcolor'] = color
         node.attr['fontcolor'] = fontcolor
-        
-    edges = [tree.get_edge(source_id, dummy_id), tree.get_edge(dummy_id, dest_id)]
-    for edge in edges:
-        edge.attr['color'] = color
-    
+
+    edge = tree.get_edge(source_id, dest_id)
+    edge.attr['color'] = color
+    edge.attr['fontcolor'] = fontcolor
+
 # -----------------------------------------------------------------------------
 
 
@@ -160,8 +159,9 @@ def set_branch_color(tree, schedule, color, fontcolor=None):
     node_id = "s"
     for thread_id in schedule:
         child_node_id = "%s.%d" % (node_id, thread_id)
-        set_edge_color(tree, node_id, child_node_id, color, fontcolor)
-        node_id = child_node_id
+        if tree.has_edge(node_id, child_node_id):
+            set_edge_color(tree, node_id, child_node_id, color, fontcolor)
+            node_id = child_node_id
     status_node_id = _get_status_node_id(tree, schedule)
     set_node_fontcolor(tree, status_node_id, fontcolor)
 
@@ -194,8 +194,9 @@ def add_schedule(tree, schedule):
     add_node(tree, node_id)
     for thread_id in schedule:
         child_node_id = "%s.%d" % (node_id, thread_id)
-        add_node(tree, child_node_id)
-        add_edge(tree, node_id, child_node_id, str(thread_id))
+        if not tree.has_node(child_node_id):
+            add_node(tree, child_node_id)
+            add_edge(tree, node_id, child_node_id, str(thread_id))
         node_id = child_node_id
     _add_status_node(tree, schedule)
 
@@ -251,27 +252,36 @@ def dump(tree, output_dir, filename, export_formats):
                      export_file))
 
 
-#---------------------------------------------------------------------------------------------------
-# trace
-#---------------------------------------------------------------------------------------------------
-
-def add_trace(tree, schedule, trace, status):
-    for index in range(0, len(schedule)):
-        instruction = trace[index]
-        instruction_str = "  %s %s %s %s  " % (instruction[0], instruction[1], instruction[2], instruction[3])
-        node = tree.get_node(dummy_node_of_schedule(schedule[0: index+1]))
-        node.attr['xlabel'] = instruction_str
-    set_status(tree, schedule, status)
-
+# -----------------------------------------------------------------------------
+# add_trace
 # -----------------------------------------------------------------------------
 
 
-def set_status(tree, schedule, status):
+def _set_status(tree, schedule, status):
     set_node_label(tree, _get_status_node_id(tree, schedule), status)
 
 # -----------------------------------------------------------------------------
 
-def parse_instruction(line, operands):
+
+def add_trace(tree, schedule, trace, status):
+    for index in range(0, len(schedule)-1):
+        instruction = trace[index]
+        instruction_str = \
+            "  %s %s %s %s  " % (instruction[0],
+                                 instruction[1],
+                                 instruction[2],
+                                 instruction[3])
+        source = tree.get_node(node_of_schedule(schedule[0: index+1]))
+        dest = tree.get_node(node_of_schedule(schedule[0: index+2]))
+        set_edge_label(tree, source, dest, instruction_str)
+    _set_status(tree, schedule, status)
+
+# -----------------------------------------------------------------------------
+# parse_trace
+# -----------------------------------------------------------------------------
+
+
+def _parse_instruction(line, operands):
     instruction = line.split(" ")[1:]
     # remove undesired characters
     instruction = list(map(lambda entry : entry.replace("\"", "").replace("\n", ""), instruction))
@@ -292,7 +302,7 @@ def parse_trace(file_name):
     operands = dict()
     trace = []
     for line in lines[0:len(lines)-1]:
-        trace.append(parse_instruction(line, operands))
+        trace.append(_parse_instruction(line, operands))
     return (trace, operands, lines[len(lines)-1])
 
 # -----------------------------------------------------------------------------

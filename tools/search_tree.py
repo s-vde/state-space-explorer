@@ -74,7 +74,7 @@ def run(schedules, records_dir, output_dir, name_filter=None, nodesep=3):
     # schedules
     tree.graph_attr['nodesep'] = 1
     ext.dump(tree, output_dir, "full_schedules", export_formats)
-    tree.graph_attr['nodesep'] = 3
+    tree.graph_attr['nodesep'] = nodesep
 
     # add traces
     for schedule, trace, status in zip(schedules, traces, statuses):
