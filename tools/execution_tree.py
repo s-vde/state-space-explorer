@@ -7,13 +7,13 @@ import pygraphviz as pgv
 #---------------------------------------------------------------------------------------------------
 
 def execution_tree(color='black', nodesep='3'):
-    tree = pgv.AGraph(strict=False,directed=True)
-    
+    tree = pgv.AGraph(strict=False, directed=True)
+
     fontsize = '22'
-    
+
     tree.graph_attr['dpi'] = '300'
     tree.graph_attr['strict'] = 'False'
-    tree.graph_attr['directed'] = 'True' 
+    tree.graph_attr['directed'] = 'True'
     tree.graph_attr['rankdir'] = 'TB'      # vertical edge direction
     tree.graph_attr['ranksep'] = '0.3'
     tree.graph_attr['nodesep'] = nodesep
@@ -34,7 +34,7 @@ def execution_tree(color='black', nodesep='3'):
     tree.edge_attr['penwidth'] = 1
     tree.edge_attr['color'] = color
     tree.edge_attr['fontsize'] = fontsize
-    
+
     return tree
 
 
@@ -223,21 +223,22 @@ def parse_schedules(file_name):
     return list(map(lambda line : parse_schedule(line), lines))
 
 
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # dump
-#---------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-def dump(tree, output_dir):
+
+def dump(tree, output_dir, filename, export_formats):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
-    dot_file = os.path.join(output_dir, "search_tree.dot")
-    print ("dumping dot representation to %s" % dot_file)
+
+    dot_file = os.path.join(output_dir, "%s.dot" % filename)
     tree.write(dot_file)
-    
-    eps_file = os.path.join(output_dir, "search_tree.eps")
-    print ("dumping eps representation to %s" % eps_file)
-    os.system("dot %s -Teps -o %s" % (dot_file, eps_file))  
+
+    for export_format in export_formats:
+        export_file = os.path.join(output_dir,
+                                   "%s.%s" % (filename, export_format))
+        os.system("dot %s -T%s -o %s" % (dot_file, export_format, export_file))
 
 
 #---------------------------------------------------------------------------------------------------

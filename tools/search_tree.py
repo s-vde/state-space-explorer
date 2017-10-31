@@ -41,15 +41,19 @@ def run(schedules, records_dir, output_dir, name_filter=None):
             operands_maps.append(operands_map)
             statuses.append(status)
 
+    tree.graph_attr['nodesep'] = 1
+    ext.dump(tree, output_dir, "schedules", ["eps"])
+    tree.graph_attr['nodesep'] = 3
+
     for schedule, trace, status in zip(schedules, traces, statuses):
         ext.add_trace(tree, schedule, trace, status)
 
-    ext.dump(tree, output_dir)
+    ext.dump(tree, output_dir, "traces", ["eps"])
 
     if name_filter is not None:
         ext.filter_tree(tree, schedules, traces, operands_maps, name_filter)
 
-    ext.dump(tree, os.path.join(output_dir, "pruned"))
+    ext.dump(tree, output_dir, "pruned", ["eps"])
 
 # -----------------------------------------------------------------------------
 # main
