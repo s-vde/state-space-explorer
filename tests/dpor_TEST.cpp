@@ -38,24 +38,24 @@ TEST_P(DporNrExecutionsTest, NrExecutionsIsAsExpected)
    ASSERT_EQ(dpor.statistics().nr_explorations(), GetParam().expected_nr_executions) << GetParam();
 }
 
-// INSTANTIATE_TEST_CASE_P(
-//    DporExactNrExecutionsTests, DporNrExecutionsTest,
-//    ::testing::Values( //
-//       NrExecutionsTestData{"shared_memory_access_non_concurrent.cpp", "0", "-std=c++14", 1},
-//       // @cite Flanagan:2005:DPR:1040305.1040315 page 8
-//       NrExecutionsTestData{"../../libs/record-replay/tests/test_programs/real_world/filesystem.c",
-//                            "0", "-DNR_THREADS=13", 1},
-//       // @cite Abdulla:2014:ODP:2535838.2535845
-//       NrExecutionsTestData{"benchmarks/readers_nonpreemptive.c", "0", "", 5} //
-//       ));
+INSTANTIATE_TEST_CASE_P(
+   DporExactNrExecutionsTests, DporNrExecutionsTest,
+   ::testing::Values( //
+      NrExecutionsTestData{"shared_memory_access_non_concurrent.cpp", "0", "-std=c++14", 1},
+      // @cite Flanagan:2005:DPR:1040305.1040315 page 8
+      NrExecutionsTestData{"../../libs/record-replay/tests/test_programs/real_world/filesystem.c",
+                           "0", "-DNR_THREADS=13", 1},
+      // @cite Abdulla:2014:ODP:2535838.2535845
+      NrExecutionsTestData{"benchmarks/readers_nonpreemptive.c", "0", "", 5} //
+      ));
 
 INSTANTIATE_TEST_CASE_P(
    DporMinNrExecutionsTests, DporNrExecutionsTest,
    ::testing::Values( //
-      // NrExecutionsTestData{
-      //    // TODO: 2 is probably the ACTUAL nr
-      //    "../../libs/record-replay/tests/test_programs/real_world/background_thread.cpp", "3",
-      //    "-std=c++14", 2}, //
+      NrExecutionsTestData{
+         // TODO: 2 is probably the ACTUAL nr
+         "../../libs/record-replay/tests/test_programs/real_world/background_thread.cpp", "3",
+         "-std=c++14", 2}, //
       NrExecutionsTestData{
          "../../libs/record-replay/tests/test_programs/real_world/bank_account.cpp", "3",
          "-std=c++14", 6} //
