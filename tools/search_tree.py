@@ -41,9 +41,23 @@ def create_animation(tree, output_dir, export_formats, schedules, traces,
 # ------------------------------------------------------------------------------
 
 
-def run(schedules, records_dir, output_dir, generate_animation=False,
+def _create_tree_animation_tree_from(schedules, traces, statuses,
+                                     operands_maps, name_filter):
+    tree = ext.create_tree_from_schedules(schedules)
+    for schedule, trace, status in zip(schedules, traces, statuses):
+        ext.set_status(tree, schedule, status)
+        ext.add_trace(tree, schedule, trace, status)
+    if name_filter is not None:
+        ext.apply_operand_names(tree, schedules, traces, operands_maps,
+                                name_filter)
+    return tree
+
+# ------------------------------------------------------------------------------
+
+
+def run(schedules, records_dir, output_dir, generate_animation=(False, None),
         name_filter=None, nodesep=3):
-    tree, schedules = ext.create_tree_from_schedules(schedules)
+    tree, schedules = ext.create_tree_from_schedules_txt(schedules)
     tree.graph_attr['nodesep'] = nodesep
 
     traces = []
@@ -83,13 +97,31 @@ def run(schedules, records_dir, output_dir, generate_animation=False,
                                 name_filter)
     ext.dump(tree, output_dir, "full_traces_nice", export_formats)
 
-    if generate_animation:
-        create_animation(tree,
+    if generate_animation[0]:
+        if generate_animation[1] is None \
+                or generate_animation[1] >= len(schedules):
+            tree_ = tree
+            schedules_ = schedules
+            traces_ = traces
+            operands_maps_ = operands_maps
+        elif generate_animation[1] < len(schedules):
+            schedules_ = schedules[0:generate_animation[1]]
+            traces_ = traces[0:generate_animation[1]]
+            statuses_ = statuses[0:generate_animation[1]]
+            operands_maps_ = operands_maps[0:generate_animation[1]]
+            tree_ = _create_tree_animation_tree_from(
+                schedules_,
+                traces_,
+                statuses_,
+                operands_maps_,
+                name_filter)
+
+        create_animation(tree_,
                          os.path.join(output_dir, "animations"),
                          export_formats,
-                         schedules,
-                         traces,
-                         operands_maps,
+                         schedules_,
+                         traces_,
+                         operands_maps_,
                          name_filter)
 
 # -----------------------------------------------------------------------------
@@ -104,7 +136,7 @@ def main(argv):
         sys.exit(2)
 
     name_filter = None
-    generate_animation = False
+    generate_animation = (False, None)
     nodesep = 3
 
     for opt, arg in opts:
@@ -115,8 +147,12 @@ def main(argv):
         if opt == '-o':
             output_dir = arg
         if opt == '-a':
-            if arg == "true":
-                generate_animation = True
+            # parse list
+            if len(arg) >= 7 and arg[0:6] == "Until:":
+                max_animation_index = int(arg[6:len(arg)])
+                generate_animation = (True, max_animation_index)
+            if arg == "True":
+                generate_animation = (True, None)
         if opt == '-s':
             nodesep = int(arg)
 

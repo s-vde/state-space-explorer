@@ -361,9 +361,17 @@ def apply_operand_names(tree, schedules, traces, operands_maps,
 
 # -----------------------------------------------------------------------------
 
-def create_tree_from_schedules(file_name):
+
+def create_tree_from_schedules(schedules):
     tree = execution_tree()
-    schedules = parse_schedules(file_name)
     for schedule in schedules:
         add_schedule(tree, schedule)
+    return tree
+
+# -----------------------------------------------------------------------------
+
+
+def create_tree_from_schedules_txt(file_name):
+    schedules = parse_schedules(file_name)
+    tree = create_tree_from_schedules(schedules)
     return (tree, schedules)
