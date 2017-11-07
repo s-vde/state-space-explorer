@@ -275,7 +275,7 @@ VectorClock::index_t HappensBefore<Dependence>::max_dependent(
 
    VectorClock C = clock(index, instruction);
 
-   DEBUGF(outputname(), "max_dependent",
+   DEBUGF("--------------------\nHappensBefore", "max_dependent",
           "[" << index << "], " << boost::apply_visitor(
              program_model::instruction_to_short_string(), instruction) << (apply_coenabled ? ", coenabled" : ""), "\n");
 

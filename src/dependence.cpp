@@ -1,6 +1,9 @@
 
 #include "dependence.hpp"
 
+#include <visible_instruction_io.hpp>
+#include <debug.hpp>
+
 
 //-------------------------------------------------------------------------------------------------
 
@@ -50,8 +53,8 @@ bool is_lock(const instruction_t& instruction)
 {
    if (const auto* lock_instr = boost::get<program_model::lock_instruction>(&instruction))
    {
-      return lock_instr->operation() == program_model::lock_operation::Lock ||
-         lock_instr->operation() == program_model::lock_operation::Trylock;
+      return lock_instr->operation() == program_model::lock_operation::Lock/* ||
+         lock_instr->operation() == program_model::lock_operation::Trylock;*/;
    }
    return false;
 }
@@ -91,9 +94,13 @@ bool one_lock(const instruction_t& instruction_1, const instruction_t& instructi
 
 bool lock_unlock_same_object(const instruction_t& instruction_1, const instruction_t& instruction_2)
 {
-   return same_operand(instruction_1, instruction_2) &&
+   bool b = same_operand(instruction_1, instruction_2) &&
           ((is_lock(instruction_1) && is_unlock(instruction_2)) ||
            (is_unlock(instruction_1) && is_lock(instruction_2)));
+           DEBUGF("\tDependence", "lock_unlock_same_obj", 
+           boost::apply_visitor(program_model::instruction_to_short_string(), instruction_1) + ", " +
+           boost::apply_visitor(program_model::instruction_to_short_string(), instruction_2), (b ? "true\n\n" : "false\n\n"));
+           return b;
 }
 
 } // end namespace
@@ -109,19 +116,27 @@ bool Dependence::dif_read_write()
 //-------------------------------------------------------------------------------------------------
 
 bool Dependence::dependent(const instruction_t& instruction_1, const instruction_t& instruction_2)
-{
-   return same_thread(instruction_1, instruction_2) ||
+{    
+   bool b = same_thread(instruction_1, instruction_2) ||
           (same_operand(instruction_1, instruction_2) &&
            (one_memory_modification(instruction_1, instruction_2) ||
             one_lock(instruction_1, instruction_2)));
+            
+            DEBUGF("\tDependence", "dependent", 
+            boost::apply_visitor(program_model::instruction_to_short_string(), instruction_1) + ", " +
+            boost::apply_visitor(program_model::instruction_to_short_string(), instruction_2), (b ? "true\n" : "false\n"));
+            return b;
 }
 
 //-------------------------------------------------------------------------------------------------
 
 bool Dependence::coenabled(const instruction_t& instruction_1, const instruction_t& instruction_2)
 {
-   return !(same_thread(instruction_1, instruction_2) ||
-            lock_unlock_same_object(instruction_1, instruction_2));
+   bool b = !same_thread(instruction_1, instruction_2) && !lock_unlock_same_object(instruction_1, instruction_2);
+DEBUGF("\tDependence", "coenabled", 
+boost::apply_visitor(program_model::instruction_to_short_string(), instruction_1) + ", " +
+boost::apply_visitor(program_model::instruction_to_short_string(), instruction_2), (b ? "true\n\n" : "false\n\n"));
+return b;
 }
 
 //-------------------------------------------------------------------------------------------------
