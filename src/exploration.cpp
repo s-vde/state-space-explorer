@@ -1,6 +1,8 @@
 
 #include "exploration.hpp"
 
+#include <iostream>
+
 
 namespace exploration {
 
@@ -14,6 +16,7 @@ program_model::Execution replay(const scheduler::program_t& program,
                                 const boost::optional<scheduler::timeout_t>& timeout)
 {
    DEBUGF("StateSpaceExplorer", "replay", program, "under schedule " << schedule << "\n");
+   std::cout << schedule << "\n\n";
    scheduler::run_under_schedule(program, schedule, timeout, records_dir);
 
    program_model::Execution execution;

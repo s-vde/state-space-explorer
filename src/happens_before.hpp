@@ -59,8 +59,23 @@ VectorClock create_clock(const execution_t& execution,
       const instruction_t& instruction_j = execution[j].instr();
       const auto tid_j = boost::apply_visitor(program_model::get_tid(), instruction_j);
 
+      const auto is_spawning = [&tid](const auto& instr)
+      {
+         if (const auto* tmi = boost::get<program_model::thread_management_instruction>(&instr))
+         {
+            if (tmi->operation() == program_model::thread_management_operation::Spawn && 
+               tmi->operand().tid() == tid)
+            {
+               DEBUG("is_spawning()");
+               return true;
+            }
+         }
+         return false;
+      };
+      
       // j -!>_pre(execution,index) instruction.tid
-      if (j > clock[tid_j] && Dependence::dependent(instruction_j, instruction))
+      if (j > clock[tid_j] && (Dependence::dependent(instruction_j, instruction) || 
+         is_spawning(instruction_j)))
       {
          clock.max(happens_before_relation[j]);
          clock[tid_j] = j;
@@ -290,15 +305,36 @@ VectorClock::index_t HappensBefore<Dependence>::max_dependent(
 
    auto max_it = std::max_element(C.cbegin(), C.cend());
 
+   const auto is_spawning = [&tid](const auto& instr)
+   {
+      if (const auto* tmi = boost::get<program_model::thread_management_instruction>(&instr))
+      {
+         if (tmi->operation() == program_model::thread_management_operation::Spawn && 
+            tmi->operand().tid() == tid)
+         {
+            DEBUG("is_spawning()");
+            return true;
+         }
+      }
+      return false;
+   };
+   
    //
    if (apply_coenabled)
    {
       while (*max_it > 0 && (!Dependence::dependent(mE[*max_it].instr(), instruction) ||
                              !Dependence::coenabled(mE[*max_it].instr(), instruction)))
       {
-         DEBUG(boost::apply_visitor(program_model::instruction_to_short_string(), mE[*max_it].instr()));
+         DEBUG("[" << *max_it << "] " << boost::apply_visitor(program_model::instruction_to_short_string(), mE[*max_it].instr()));
          program_model::Thread::tid_t max_tid = std::distance(C.cbegin(), max_it);
-         C[max_tid] = mHB[*max_it][max_tid];
+         if (!is_spawning(mE[*max_it].instr()))
+         {
+            C[max_tid] = mHB[*max_it][max_tid];
+         }
+         else
+         {
+            C[max_tid] = 0;
+         }
          max_it = std::max_element(C.cbegin(), C.cend());
       }
    }
