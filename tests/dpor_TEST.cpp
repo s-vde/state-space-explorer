@@ -47,6 +47,7 @@ INSTANTIATE_TEST_CASE_P(
                            "0", "-DNR_THREADS=13", 1},
       // @cite Abdulla:2014:ODP:2535838.2535845
       NrExecutionsTestData{"benchmarks/readers_nonpreemptive.c", "0", "", 5} //
+      // NOTE: with --opt 3 things are optimizaed away in this example
       ));
 
 INSTANTIATE_TEST_CASE_P(
