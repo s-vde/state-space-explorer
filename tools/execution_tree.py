@@ -327,7 +327,7 @@ def _create_selected_operands_map(operands_map, selected_operands):
 
 
 def apply_operand_names(tree, schedules, traces, operands_maps,
-                        selected_operands):
+                        selected_operands, operand_conversion):
     selected_operands_maps = \
         list(map(lambda operands_map:
                  _create_selected_operands_map(operands_map,
@@ -352,9 +352,17 @@ def apply_operand_names(tree, schedules, traces, operands_maps,
                         % (instruction[0], instruction[1], instruction[2])
 
                 else:
+                    operand_name = selected_operands_map[instruction[2]]
+
+                    # check whether to convert the name
+                    for substr, name in operand_conversion:
+                        if substr in operand_name:
+                            operand_name = operand_name.replace(substr, name)
+                            break
+
                     new_label = "  %s %s %s  " \
                         % (instruction[0], instruction[1],
-                           selected_operands_map[instruction[2]])
+                           operand_name)
 
                 set_edge_label(tree, src_id, dst_id, new_label)
                 src_id = dst_id

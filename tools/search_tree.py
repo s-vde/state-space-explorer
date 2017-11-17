@@ -56,7 +56,7 @@ def _create_tree_animation_tree_from(schedules, traces, statuses,
 
 
 def run(schedules, records_dir, output_dir, generate_animation=(False, None),
-        name_filter=None, nodesep=3):
+        name_filter=None, name_conversion=None, nodesep=3):
     tree, schedules = ext.create_tree_from_schedules_txt(schedules)
     tree.graph_attr['nodesep'] = nodesep
 
@@ -94,7 +94,7 @@ def run(schedules, records_dir, output_dir, generate_animation=(False, None),
     # apply operand names
     if name_filter is not None:
         ext.apply_operand_names(tree, schedules, traces, operands_maps,
-                                name_filter)
+                                name_filter, name_conversion)
     ext.dump(tree, output_dir, "full_traces_nice", export_formats)
 
     if generate_animation[0]:
@@ -131,17 +131,20 @@ def run(schedules, records_dir, output_dir, generate_animation=(False, None),
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "f:i:o:a:s:", [])
+        opts, args = getopt.getopt(argv, "f:i:o:a:s:m:", [])
     except getopt.GetoptError:
         sys.exit(2)
 
     name_filter = None
+    name_conversion = None
     generate_animation = (False, None)
     nodesep = 3
 
     for opt, arg in opts:
         if opt == '-f':
             name_filter = ast.literal_eval(arg)
+        if opt == '-m':
+            name_conversion = ast.literal_eval(arg)
         if opt == '-i':
             program_records_dir = arg
         if opt == '-o':
@@ -163,6 +166,7 @@ def main(argv):
         output_dir,
         generate_animation=generate_animation,
         name_filter=name_filter,
+        name_conversion=name_conversion,
         nodesep=nodesep)
     print ("==========")
 
